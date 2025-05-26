@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Image</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 2rem;
+        }
+        .upload-container {
+            max-width: 400px;
+            margin: auto;
+            padding: 2rem;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            text-align: center;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .upload-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4285f4;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+        .submit-btn {
+            padding: 10px 20px;
+            background-color: #34a853;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .submit-btn:hover {
+            background-color: #2c8c46;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-container">
+        <h1>Upload an Image</h1>
+        <form method="POST" action="/upload" enctype="multipart/form-data">
+            <label for="file-upload" class="upload-label">Choose Image</label>
+            <input id="file-upload" type="file" name="image" accept="image/*" required>
+            <br>
+            <input class="submit-btn" type="submit" value="Upload & Process">
+        </form>
+    </div>
+</body>
+</html>
