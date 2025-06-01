@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Übersetzungsergebnis</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .image-display {
+            margin-bottom: 1rem;
+        }
+        .text-box {
+            background-color: #f7f7f7;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+            white-space: pre-wrap; /* Zeilenumbrüche sichtbar machen */
+        }
+        h1 {
+            margin-bottom: 1rem;
+        }
+        a.back-link {
+            text-decoration: none;
+            color: #4285f4;
+            margin-top: 2rem;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Übersetzungsergebnis</h1>
+
+        <div class="image-display">
+            <p><strong>Originalbild:</strong></p>
+            <img src="{{ original_image }}" alt="Hochgeladenes Bild" width="400">
+        </div>
+
+        <div class="text-box">
+            <h2>Erkannter deutscher Text:</h2>
+            <p>{{ extracted_text }}</p>
+        </div>
+
+        <div class="text-box">
+            <h2>Übersetzung ins Englische:</h2>
+            <p>{{ translated_text }}</p>
+        </div>
+
+        <a href="{{ url_for('upload_form') }}" class="back-link">&larr; Neues Bild hochladen</a>
+    </div>
+</body>
+</html>

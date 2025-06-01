@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8" />
     <title>Upload Image</title>
     <style>
         body {
@@ -43,11 +44,11 @@
 <body>
     <div class="upload-container">
         <h1>Upload an Image</h1>
-        <form method="POST" action="/upload" enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('translate_image') }}" enctype="multipart/form-data">
             <label for="file-upload" class="upload-label">Choose Image</label>
             <input id="file-upload" type="file" name="image" accept="image/*" required>
             <br>
-            <input class="submit-btn" type="submit" value="Upload & Process">
+            <input class="submit-btn" type="submit" value="Upload & Translate">
         </form>
     </div>
 </body>
