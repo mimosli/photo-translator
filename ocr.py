@@ -5,7 +5,9 @@ def extract_text(image_path: str) -> str:
     """
     Liest den deutschen Text aus dem Bild unter `image_path` aus.
     """
-    text = pytesseract.image_to_string(Image.open(image_path), lang="deu")
+    # -c preserve_interword_spaces=1 lässt Pytesseract Leerzeichen weniger stark zusammenziehen
+    custom_config = r'--psm 6 -c preserve_interword_spaces=1'
+    text = pytesseract.image_to_string(Image.open(image_path), lang="deu", config=custom_config)
     return text
 
 
