@@ -39,17 +39,60 @@
         .submit-btn:hover {
             background-color: #2c8c46;
         }
+        #preview {
+            margin: 1rem 0;
+            text-align: center;
+        }
+        #preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="upload-container">
         <h1>Upload an Image</h1>
-        <form method="POST" action="{{ url_for('translate_image') }}" enctype="multipart/form-data">
+        <form id="uploadForm" method="POST" action="{{ url_for('translate_image') }}" enctype="multipart/form-data">
             <label for="file-upload" class="upload-label">Choose Image</label>
             <input id="file-upload" type="file" name="image" accept="image/*" required>
-            <br>
+
+            <!-- Preview area -->
+            <div id="preview"></div>
+
             <input class="submit-btn" type="submit" value="Upload & Translate">
         </form>
     </div>
+
+    <script>
+        const fileInput = document.getElementById('file-upload');
+        const preview = document.getElementById('preview');
+        const form = document.getElementById('uploadForm');
+
+        // Show image preview
+        fileInput.addEventListener('change', () => {
+            preview.innerHTML = '';
+            const file = fileInput.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file.');
+                fileInput.value = '';
+                return;
+            }
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            preview.appendChild(img);
+        });
+
+        // Prevent submit without a file
+        form.addEventListener('submit', (evt) => {
+            if (!fileInput.files.length) {
+                evt.preventDefault();
+                alert('You must select an image before uploading.');
+            }
+        });
+    </script>
 </body>
 </html>
