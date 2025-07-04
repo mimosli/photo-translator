@@ -33,7 +33,6 @@ def translate_image():
     """
     if "image" not in request.files:
         return "No file part", 400
-
     file = request.files["image"]
     if file.filename == "":
         return "No selected file", 400

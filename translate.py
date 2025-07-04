@@ -1,37 +1,49 @@
 import os
-import openai
 import deepl
 from dotenv import load_dotenv
+from make_glossary import apply_glossary
 
-import ocr
-#from ocr import sample_text
-
+# Lade Umgebungsdaten aus .env
 load_dotenv()
+DEEPL_KEY   = os.getenv("DEEPL_API_KEY")
+GLOSSARY_ID = os.getenv("DEEPL_GLOSSARY_ID")
+USE_GLOSSARY = bool(GLOSSARY_ID)
+
 
 def translate_with_deepl(text: str) -> str:
     """
-    Übersetzt den gegebenen Text von Deutsch nach Englisch (UK) via DeepL.
+    Übersetzt deutschen Text ins Englische (UK) via DeepL.
+    - Zuerst werden OCR-Fehler per apply_glossary korrigiert.
+    - Dann erfolgt der API-Aufruf, ggf. mit Glossary.
     """
-    translator = deepl.Translator(os.getenv("DEEPL_API_KEY"))
-    result = translator.translate_text(
-        text,
-        source_lang="DE",
-        target_lang="EN-GB"
-    )
+    # 1) OCR-Ergebnis bereinigen
+    corrected = apply_glossary(text)
+
+    # 2) Deepl-Client initialisieren
+    translator = deepl.Translator(DEEPL_KEY)
+
+    # 3) Parameter für Übersetzung
+    params = {
+        "text": corrected,
+        "source_lang": "DE",
+        "target_lang": "EN-GB"
+    }
+    if USE_GLOSSARY:
+        params["glossary_id"] = GLOSSARY_ID
+
+    # 4) API-Aufruf
+    result = translator.translate_text(**params)
     return result.text
 
-# def translate_with_gpt(text):
-# openai.api_key = os.getenv("OPENAI_API_KEY")
-# response = openai.ChatCompletion.create(
-#     model="gpt-4",
-#     messages=[
-#         {"role": "system", "content": "You are a helpful translation assistant."},
-#         {"role": "user", "content": f"Übersetze folgenden Text ins Englische: {text}"}
-#     ]
-# )
-# return response.choices[0].message.content.strip()
-
-#sample_translated_dp = translate_with_deepl(sample_text)
-#sample_translated_oai = translate_with_gpt(sample_text)
-#print(sample_translated_dp)
-#print(sample_translated_oai)
+# Optional: GPT-basierte Übersetzung (wenn benötigt)
+# import openai
+# def translate_with_gpt(text: str) -> str:
+#     openai.api_key = os.getenv("OPENAI_API_KEY")
+#     response = openai.ChatCompletion.create(
+#         model="gpt-4",
+#         messages=[
+#             {"role": "system", "content": "You are a helpful translation assistant."},
+#             {"role": "user", "content": f"Übersetze ins Englische: {corrected}"}
+#         ]
+#     )
+#     return response.choices[0].message.content.strip()
