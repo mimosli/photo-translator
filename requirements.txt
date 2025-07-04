@@ -18,8 +18,8 @@ jiter==0.10.0
 MarkupSafe==3.0.2
 numpy==2.2.6
 openai==1.82.0
-#opencv-python==4.11.0.86
-opencv-python-headless==4.11.0.86
+opencv-python==4.11.0.86
+#opencv-python-headless==4.11.0.86
 packaging==25.0
 pillow==11.2.1
 pydantic==2.11.5
