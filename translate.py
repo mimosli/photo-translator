@@ -1,7 +1,7 @@
 import os
 import deepl
 from dotenv import load_dotenv
-from make_glossary import apply_glossary
+from glossary import apply_glossary
 
 # Lade Umgebungsdaten aus .env
 load_dotenv()
@@ -29,7 +29,7 @@ def translate_with_deepl(text: str) -> str:
         "target_lang": "EN-GB"
     }
     if USE_GLOSSARY:
-        params["glossary_id"] = GLOSSARY_ID
+        params["glossary"] = GLOSSARY_ID
 
     # 4) API-Aufruf
     result = translator.translate_text(**params)
