@@ -1,0 +1,25 @@
+import os
+import pytest
+from translate import translate_with_deepl
+from glossary import apply_glossary
+
+def test_apply_glossary():
+    # Falsche OCR-Erkennung „crech“ wird zu „credo“
+    assert apply_glossary("das crech") == "das credo"
+
+def test_translate_simple(monkeypatch):
+    # Monkeypatch DeepL-Client, damit kein echter API-Call erfolgt
+    class DummyResult:
+        def __init__(self, text): self.text = text
+
+    class DummyTranslator:
+        def translate_text(self, **kwargs):
+            # Simuliere eine Übersetzung
+            return DummyResult(f"TRANSLATED: {kwargs['text']}")
+
+    # Override deepl.Translator im Modul
+    import translate
+    monkeypatch.setattr(translate, "translator", DummyTranslator())
+
+    result = translate_with_deepl("hallo welt")
+    assert result.startswith("TRANSLATED: hallo welt")
