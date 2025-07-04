@@ -20,11 +20,8 @@ jobs:
 
     - name: Install system dependencies
       run: |
-        sudo apt-get updaterun
         sudo apt-get update
-        sudo apt-get install -y tesseract-ocr tesseract-ocr-deu
-
-    - name: Set up Python ${{ matrix.python-version }}
+        sudo apt-get install -y tesseract-ocr tesseract-ocr-de    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
