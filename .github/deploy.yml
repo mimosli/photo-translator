@@ -1,0 +1,35 @@
+name: CD to OVH
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test  # ensures your CI tests have passed
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # Add host key trust for your domain
+          ssh-keyscan www.leilafrey.com >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        run: |
+          ssh -i ~/.ssh/id_ed25519 ubuntu@www.leilafrey.com << 'EOF'
+            set -e
+            cd /home/ubuntu/photo-translator
+            git pull origin main
+            source venv/bin/activate
+            pip install --upgrade pip
+            pip install -r requirements.txt
+            sudo systemctl restart photo-translator
+          EOF
