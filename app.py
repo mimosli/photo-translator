@@ -5,7 +5,13 @@ import os
 from ocr import extract_text
 from translate import translate_with_deepl  # or use translate_with_gpt
 from PIL import Image
+import logging
 
+# set up JSON-style logs
+logging.basicConfig(
+    format='{"time":"%(asctime)s","level":"%(levelname)s","msg":"%(message)s"}',
+    level=logging.INFO
+)
 
 app = Flask(__name__)
 
@@ -55,6 +61,21 @@ def translate_image():
         extracted_text=german_text,
         translated_text=translated_text
     )
+@app.route("/healthz")
+def healthz():
+    return jsonify(status="ok", version="1.0"), 200
+
+@app.route("/translate", methods=["POST"])
+def translate_image():
+    # log upload metadata
+    f = request.files.get("image")
+    metadata = {
+        "client_ip": request.remote_addr,
+        "filename": f.filename if f else None,
+        "user_agent": request.headers.get("User-Agent")
+    }
+    logging.info(f"upload_metadata: {metadata}")
+
 
 if __name__ == "__main__":
     # Im Debug-Modus laufen lassen, Port 5001 (oder 5000)
