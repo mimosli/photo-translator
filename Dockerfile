@@ -9,6 +9,14 @@ RUN apt-get update \
     libtesseract-dev \
  && rm -rf /var/lib/apt/lists/*
 
+ # install geolite2 database and reader
+RUN pip install geoip2
+# fetch the free MaxMind GeoLite2-City database
+ADD https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz /tmp/
+RUN cd /tmp && tar xzf GeoLite2-City.tar.gz \
+    && mv GeoLite2-City_*/GeoLite2-City.mmdb /app/GeoLite2-City.mmdb \
+    && rm -rf /tmp/*
+
 # Set working dir
 WORKDIR /app
 
