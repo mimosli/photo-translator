@@ -5,15 +5,21 @@ services:
     build: .
     image: photo-translator:latest
     env_file:
-      - .env
+      - .env              # contains DEEPL_API_KEY, POSTGRES_USER etc.
     ports:
       - "5001:5001"
     restart: always
     depends_on:
       - db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   db:
     image: postgres:15
+    restart: always
     environment:
       POSTGRES_DB: photodb
       POSTGRES_USER: photo
@@ -23,6 +29,7 @@ services:
 
   grafana:
     image: grafana/grafana:9.4.7
+    restart: always
     ports:
       - "3000:3000"
     environment:
