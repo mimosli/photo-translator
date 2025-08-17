@@ -5,7 +5,7 @@ import logging
 import time
 from uuid import uuid4
 
-from flask        import Flask, request, jsonify, render_template, url_for, Response
+from flask        import Flask, request, jsonify, render_template, url_for, Response, g
 from ocr          import extract_text
 from translate    import translate_with_deepl   # or translate_with_gpt
 from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
@@ -14,6 +14,7 @@ import psycopg
 from PIL import Image, ImageOps
 from io import BytesIO
 from werkzeug.utils import secure_filename
+from werkzeug.exceptions import RequestEntityTooLarge
 
 
 # ─── basic JSON logging ─────────────────────────────────────────────────────────
@@ -40,13 +41,49 @@ app.config["MAX_CONTENT_LENGTH"] = max(MAX_BYTES * 6, 12 * 1024 * 1024)
 # ─── postgres DB ───────────────────────────────────────────────────────────────
 # expects DATABASE_URL in your .env, e.g.:
 #   export DATABASE_URL="postgresql://photo:secretpassword@db:5432/photodb"
-conn = psycopg.connect(os.getenv("DATABASE_URL"))
-conn.autocommit = True
+conn = None
+def get_db_conn():
+    global conn
+    if conn is not None:
+        try:
+            if not conn.closed:
+                return conn
+        except Exception:
+            conn = None
+    dsn = os.getenv("DATABASE_URL")
+    if not dsn:
+        logging.warning("DATABASE_URL not set; DB disabled")
+        return None
+    for attempt in range(1, 8):  # retry ~7s total
+        try:
+            c = psycopg.connect(dsn)
+            c.autocommit = True
+            conn = c
+            return conn
+        except Exception as e:
+            logging.warning(f"DB connect failed (attempt {attempt}): {e}")
+            time.sleep(1)
+    logging.error("DB unavailable; proceeding without DB")
+    return None
+
 
 # ─── GeoIP ─────────────────────────────────────────────────────────────────────
-# download MaxMind DB, place in project root or elsewhere
-GEOIP_DB_PATH = "./GeoLite2-Country.mmdb"
-geoip_reader = GeoIP2Reader(GEOIP_DB_PATH)
+GEOIP_DB_PATH = os.environ.get("GEOIP_DB_PATH", "./GeoLite2-Country.mmdb")
+geoip_reader = None
+try:
+    from geoip2.database import Reader as GeoIP2Reader
+    geoip_reader = GeoIP2Reader(GEOIP_DB_PATH)
+except Exception as e:
+    logging.warning(f"GeoIP disabled (path={GEOIP_DB_PATH}): {e}")
+
+def get_country_from_ip(ip: str) -> str:
+    if not geoip_reader:
+        return "ZZ"
+    try:
+        return geoip_reader.country(ip).country.iso_code or "ZZ"
+    except Exception:
+        return "ZZ"
+
 
 # ─── Prometheus metrics ────────────────────────────────────────────────────────
 TRANSLATE_COUNTER = Counter(
@@ -66,25 +103,46 @@ COUNTRY_GAUGE = Gauge(
 
 @app.before_request
 def _before_request():
-    if request.path == "/translate":
-        request._timer = TRANSLATE_LATENCY.time()
+    # Only time the translate endpoint
+    if request.endpoint == "translate_image":
+        g._t_start = time.perf_counter()
 
 @app.after_request
 def _after_request(response):
-    if request.path == "/translate":
-        # 1) Prometheus
-        TRANSLATE_COUNTER.inc()
-        request._timer.observe_duration()
+    try:
+        if request.endpoint == "translate_image":
+            # 1) Prometheus counter
+            TRANSLATE_COUNTER.inc()
 
-        # 2) GeoIP & country gauge
-        ip = request.remote_addr or "0.0.0.0"
-        try:
-            country = geoip_reader.country(ip).country.iso_code or "ZZ"
-        except Exception:
-            country = "ZZ"
-        COUNTRY_GAUGE.labels(country=country).inc()
+            # 2) Prometheus latency
+            t0 = getattr(g, "_t_start", None)
+            if t0 is not None:
+                TRANSLATE_LATENCY.observe(time.perf_counter() - t0)
 
+            # 3) GeoIP gauge (safe)
+            ip = request.remote_addr or "0.0.0.0"
+            try:
+                if "get_country_from_ip" in globals():
+                    country = get_country_from_ip(ip)
+                else:
+                    country = geoip_reader.country(ip).country.iso_code if geoip_reader else "ZZ"
+            except Exception:
+                country = "ZZ"
+            COUNTRY_GAUGE.labels(country=country or "ZZ").inc()
+    except Exception as e:
+        logging.warning(f"metrics_after_request_failed: {e}")
     return response
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def too_large(e):
+    return jsonify({"error": "File too large", "max": MAX_BYTES}), 413
+
+def get_country_from_ip(ip: str) -> str:
+    try:
+        return geoip_reader.country(ip).country.iso_code or "Hint: GeoAnalytics" if geoip_reader else "Check: GeoAnalytics"
+    except Exception:
+        return "ZZ"
 
 # ─── routes ─────────────────────────────────────────────────────────────────────
 
@@ -180,53 +238,84 @@ def api_upload():
         "bytes": buf.tell()
     }), 200
 
+
 @app.route("/translate", methods=["POST"])
 def translate_image():
-    # file validation
-    if "image" not in request.files:
-        return "No file part", 400
-    f = request.files["image"]
-    if f.filename == "":
-        return "No selected file", 400
+    try:
+        # 1) Upload validieren
+        if "image" not in request.files:
+            return "No file part", 400
+        f = request.files["image"]
+        if not f or f.filename == "":
+            return "No selected file", 400
 
-    # save
-    filename = f.filename
-    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    f.save(filepath)
+        # 2) Sicherer, eindeutiger Dateiname
+        original_name = secure_filename(f.filename or "photo.jpg")
+        if "." not in original_name:
+            original_name += ".jpg"
+        base, ext = os.path.splitext(original_name)
+        filename = f"{base}_{int(time.time())}{ext}"
+        filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        f.save(filepath)
 
-    # OCR → translate
-    german_text     = extract_text(filepath).strip()
-    translated_text = translate_with_deepl(german_text).strip()
+        # 3) OCR
+        german_text = ""
+        try:
+            german_text = (extract_text(filepath) or "").strip()
+        except Exception as e:
+            logging.exception("ocr_failed")
 
-    # log metadata
-    metadata = {
-        "client_ip":  request.remote_addr,
-        "filename":   filename,
-        "user_agent": request.headers.get("User-Agent"),
-    }
-    logging.info(f"upload_metadata: {metadata}")
+        # 4) Übersetzung
+        translated_text = ""
+        translation_error = None
+        try:
+            if german_text:
+                translated_text = (translate_with_deepl(german_text) or "").strip()
+        except Exception as e:
+            logging.exception("translation_failed")
+            translation_error = str(e)[:200]  # kurze Fehlermeldung für UI
 
-    # persist to DB
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            INSERT INTO uploads (filename, client_ip, user_agent, country)
-            VALUES (%s, %s, %s, %s)
-            """,
-            ( filename,
-              metadata["client_ip"],
-              metadata["user_agent"],
-              # country label from the last after_request:
-              geoip_reader.country(metadata["client_ip"]).country.iso_code or "ZZ"
-            )
+        # 5) Metadaten & DB (best effort)
+        metadata = {
+            "client_ip":  request.remote_addr,
+            "filename":   filename,
+            "user_agent": request.headers.get("User-Agent"),
+            "country":    get_country_from_ip(request.remote_addr or "0.0.0.0"),
+        }
+        logging.info(f"upload_metadata: {metadata}")
+
+        db = get_db_conn() if 'get_db_conn' in globals() else None
+        if db:
+            try:
+                with db.cursor() as cur:
+                    cur.execute(
+                        """
+                        INSERT INTO uploads (filename, client_ip, user_agent, country)
+                        VALUES (%s, %s, %s, %s)
+                        """,
+                        (metadata["filename"], metadata["client_ip"], metadata["user_agent"], metadata["country"])
+                    )
+            except Exception as e:
+                logging.warning(f"upload_db_insert_failed: {e}")
+
+        # 6) Ergebnis HTML rendern (zeigt ggf. translation_error an)
+        return render_template(
+            "result.html",
+            original_image  = url_for("static", filename=f"uploads/{filename}"),
+            extracted_text  = german_text,
+            translated_text = translated_text,
+            translation_error = translation_error
         )
-
-    return render_template(
-        "result.html",
-        original_image  = url_for("static", filename=f"uploads/{filename}"),
-        extracted_text  = german_text,
-        translated_text = translated_text
-    )
+    except Exception as e:
+        logging.exception("translate_route_failed")
+        # Fallback: sehr einfache Fehlermeldung, aber kein 500 für den User-Flow
+        return render_template(
+            "result.html",
+            original_image=None,
+            extracted_text="",
+            translated_text="",
+            translation_error="Unerwarteter Serverfehler. Bitte später erneut versuchen."
+        ), 200
 
 
 @app.route("/healthz")

@@ -2,7 +2,10 @@ version: "3.8"
 
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        MAXMIND_LICENSE_KEY: ${MAXMIND_LICENSE_KEY}
     image: photo-translator:latest
     env_file:
       - .env                      # your existing secrets (DEEPL_API_KEY, etc.)
@@ -23,7 +26,7 @@ services:
     depends_on:
       - db
     healthcheck:
-      # NOTE: Make sure your image has curl. If not, add it in the Dockerfile or switch to wget.
+      # NOTE: Make sure your image has curl. If not, add it in the Dockerfile or switch to wget. We do not install curl within the image.
       test: ["CMD", "curl", "-fsS", "http://localhost:5001/healthz"]
       interval: 30s
       timeout: 5s

@@ -1,4 +1,7 @@
-venv/
+.git
 __pycache__/
+.venv/
+venv/
 *.pyc
-.env
+static/uploads/
+.DS_Store

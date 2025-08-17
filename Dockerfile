@@ -4,25 +4,31 @@ FROM python:3.12-slim
 # Install Tesseract OCR + German language support
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
+    curl ca-certificates \
     tesseract-ocr \
     tesseract-ocr-deu \
     libtesseract-dev \
  && rm -rf /var/lib/apt/lists/*
 
- # install geolite2 database and reader
-RUN pip install geoip2
-# fetch the free MaxMind GeoLite2-City database
-ADD https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz /tmp/
-RUN cd /tmp && tar xzf GeoLite2-City.tar.gz \
-    && mv GeoLite2-City_*/GeoLite2-City.mmdb /app/GeoLite2-City.mmdb \
-    && rm -rf /tmp/*
-
-# Set working dir
+# Python deps
 WORKDIR /app
-
-# Copy and install Python deps
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
+
+ 
+# ---- MaxMind GeoLite2 Country (requires license key) ----
+ARG MAXMIND_LICENSE_KEY
+RUN if [ -n "$MAXMIND_LICENSE_KEY" ]; then \
+      echo "Downloading GeoLite2-Country with license key..." && \
+      curl -fsSL "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country&license_key=${MAXMIND_LICENSE_KEY}&suffix=tar.gz" \
+        -o /tmp/GeoLite2-Country.tar.gz && \
+      mkdir -p /tmp/geolite && \
+      tar -xzf /tmp/GeoLite2-Country.tar.gz -C /tmp/geolite --strip-components=1 && \
+      mv /tmp/geolite/GeoLite2-Country.mmdb /app/GeoLite2-Country.mmdb && \
+      rm -rf /tmp/* ; \
+    else \
+      echo "WARNING: MAXMIND_LICENSE_KEY not set; skipping GeoLite2 DB download"; \
+    fi
 
 # Copy all code
 COPY . ./
