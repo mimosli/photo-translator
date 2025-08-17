@@ -2,6 +2,8 @@ print("hello world")
 
 import os
 import logging
+import time
+from uuid import uuid4
 
 from flask        import Flask, request, jsonify, render_template, url_for, Response
 from ocr          import extract_text
@@ -9,6 +11,10 @@ from translate    import translate_with_deepl   # or translate_with_gpt
 from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
 from geoip2.database import Reader as GeoIP2Reader
 import psycopg
+from PIL import Image, ImageOps
+from io import BytesIO
+from werkzeug.utils import secure_filename
+
 
 # ─── basic JSON logging ─────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -21,6 +27,15 @@ app = Flask(__name__)
 UPLOAD_FOLDER = os.path.join("static", "uploads")
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+# ─── upload limits (env-overridable) ───────────────────────────────────────────────────────────────
+# e.g. export MAX_BYTES=3145728 and MAX_DIMENSION=2200 in docker-compose
+MAX_BYTES = int(os.environ.get("MAX_BYTES", 3 * 1024 * 1024))   # default 3 MB
+MAX_DIMENSION = int(os.environ.get("MAX_DIMENSION", 2200))      # default 2200 px box
+
+# allow larger intake so we can recompress; cap to ~12 MB
+app.config["MAX_CONTENT_LENGTH"] = max(MAX_BYTES * 6, 12 * 1024 * 1024)
 
 # ─── postgres DB ───────────────────────────────────────────────────────────────
 # expects DATABASE_URL in your .env, e.g.:
@@ -48,6 +63,7 @@ COUNTRY_GAUGE = Gauge(
     ['country']
 )
 
+
 @app.before_request
 def _before_request():
     if request.path == "/translate":
@@ -74,8 +90,95 @@ def _after_request(response):
 
 @app.route("/")
 def upload_form():
-    return render_template("upload.html")
+    #return render_template("upload.html")
+    return render_template("welcome.html")
 
+@app.route("/api/config", methods=["GET"])
+def api_config():
+    return jsonify({
+        "maxBytes": MAX_BYTES,
+        "maxDimension": MAX_DIMENSION
+    }), 200
+
+@app.route("/api/upload", methods=["POST"])
+def api_upload():
+    # validate
+    if "file" not in request.files:
+        return jsonify({"error": "No file"}), 400
+    f = request.files["file"]
+    if f.filename == "":
+        return jsonify({"error": "Empty filename"}), 400
+
+    # load & auto-rotate based on EXIF
+    try:
+        img = Image.open(f.stream)
+    except Exception:
+        return jsonify({"error": "Invalid image"}), 400
+
+    # Convert to RGB (JPG target), autorotate using EXIF
+    try:
+        img = ImageOps.exif_transpose(img).convert("RGB")
+    except Exception:
+        img = img.convert("RGB")
+
+    # Fit to bounding box (preserves aspect), no enlargement
+    img.thumbnail((MAX_DIMENSION, MAX_DIMENSION))
+
+    # Iteratively compress to target MAX_BYTES
+    quality = 88
+    buf = BytesIO()
+    img.save(buf, format="JPEG", quality=quality, optimize=True)
+    while buf.tell() > MAX_BYTES and quality > 60:
+        quality -= 6
+        buf.seek(0); buf.truncate(0)
+        img.save(buf, format="JPEG", quality=quality, optimize=True)
+
+    if buf.tell() > MAX_BYTES:
+        return jsonify({
+            "error": "Image too large after compression",
+            "size": buf.tell(),
+            "max": MAX_BYTES
+        }), 413
+
+    # Persist with safe unique name
+    orig = secure_filename(f.filename or "upload.jpg")
+    base, _ = os.path.splitext(orig)
+    unique = f"{int(time.time())}_{uuid4().hex[:8]}"
+    safe_name = f"{base}_{unique}.jpg"
+    out_path = os.path.join(app.config["UPLOAD_FOLDER"], safe_name)
+    with open(out_path, "wb") as out:
+        out.write(buf.getvalue())
+
+    # Build relative URL (served from /static/uploads)
+    url = url_for("static", filename=f"uploads/{safe_name}", _external=False)
+
+    # Optional: minimal metadata log (keeps your existing pattern)
+    logging.info(f'upload_store: filename="{safe_name}" bytes={buf.tell()} ip={request.remote_addr}')
+
+    # Optional: DB insert for the upload (mirrors your /translate logging)
+    try:
+        with conn.cursor() as cur:
+            country = "ZZ"
+            try:
+                ip = request.remote_addr or "0.0.0.0"
+                country = geoip_reader.country(ip).country.iso_code or "ZZ"
+            except Exception:
+                pass
+            cur.execute(
+                """
+                INSERT INTO uploads (filename, client_ip, user_agent, country)
+                VALUES (%s, %s, %s, %s)
+                """,
+                ( safe_name, request.remote_addr, request.headers.get("User-Agent"), country )
+            )
+    except Exception as e:
+        logging.warning(f"upload_db_insert_failed: {e}")
+
+    return jsonify({
+        "ok": True,
+        "url": url,
+        "bytes": buf.tell()
+    }), 200
 
 @app.route("/translate", methods=["POST"])
 def translate_image():

@@ -1,0 +1,168 @@
+<main class="container" style="max-width:920px;margin:0 auto;padding:clamp(16px,4vw,32px);font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial">
+  <section class="card" style="background:#0f1720;color:#e8eef5;border-radius:18px;padding:clamp(16px,3.5vw,28px);border:1px solid rgba(255,255,255,.06);box-shadow:0 10px 30px rgba(0,0,0,.35)">
+    <h1 style="margin:0 0 10px;font-size:clamp(22px,5.5vw,34px)">Welcome to my helper technology for "my rollercoaster life". This will help you out to get the fullest experience of this three language masterpiece. 📚</h1>
+    <p style="color:#a9b6c7;line-height:1.55">Snap a photo of your poetry and upload it securely. On yout smartphone, “use camera” opens the camera directly (if the browser & you allows).</p>
+    <p style="color:#a9b6c7;line-height:1.55">We will automatically keep photos under the size limit for faster, safer uploads.</p>
+  </section>
+
+  <section class="card" style="margin-top:16px;background:#0f1720;color:#e8eef5;border-radius:18px;padding:clamp(16px,3.5vw,28px);border:1px solid rgba(255,255,255,.06);box-shadow:0 10px 30px rgba(0,0,0,.35)">
+    <h2 style="margin:0 0 10px;font-size:clamp(18px,4.5vw,24px)">Take a photo or upload an image</h2>
+    <p class="helper" style="color:#a9b6c7">Max size <strong id="limit-label">…</strong>. We will resize if needed.</p>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin:10px 0">
+      <label for="cameraInput" style="display:inline-flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#14212f;border:1px dashed rgba(255,255,255,.12);cursor:pointer">📷 Use camera</label>
+      <input id="cameraInput" type="file" accept="image/*" capture="environment" class="hidden" style="display:none" />
+
+      <label for="fileInput" style="display:inline-flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#14212f;border:1px dashed rgba(255,255,255,.12);cursor:pointer">🖼️ Choose from photos</label>
+      <input id="fileInput" type="file" accept="image/*" class="hidden" style="display:none" />
+    </div>
+
+    <div id="supportNote" style="color:#a9b6c7;font-size:13px;margin-bottom:8px"></div>
+    <div id="preview" style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px"></div>
+    <div id="status" role="status" style="margin-top:10px;color:#a9b6c7"></div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px">
+      <button id="uploadBtn" disabled style="padding:12px 16px;border-radius:12px;border:0;background:#46a1ff;color:#05121d;font-weight:700;cursor:pointer">Upload</button>
+      <button id="clearBtn" disabled style="padding:12px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#1a2633;color:#e8eef5;cursor:pointer">Clear</button>
+    </div>
+  </section>
+</main>
+
+<script>
+  // ---- Client config (defaults; server can override below) ----
+  const CONFIG = {
+    MAX_BYTES: 3 * 1024 * 1024,
+    MAX_DIMENSION: 2200,
+    JPEG_QUALITY_START: 0.88,
+    JPEG_QUALITY_FLOOR: 0.6,
+    UPLOAD_URL: "{{ url_for('api_upload') }}",
+    FIELD_NAME: "file"
+  };
+
+  // Try to hydrate from server so UI matches backend policy
+  (async function hydrate(){
+    try{
+      const r = await fetch("{{ url_for('api_config') }}");
+      if(r.ok){
+        const j = await r.json();
+        if(typeof j.maxBytes === "number") CONFIG.MAX_BYTES = j.maxBytes;
+        if(typeof j.maxDimension === "number") CONFIG.MAX_DIMENSION = j.maxDimension;
+      }
+    }catch(_){}
+    document.getElementById("limit-label").textContent = (CONFIG.MAX_BYTES/1024/1024).toFixed(0) + " MB";
+  })();
+
+  const dqs = s => document.querySelector(s);
+  const statusEl = dqs("#status");
+  const previewEl = dqs("#preview");
+  const uploadBtn = dqs("#uploadBtn");
+  const clearBtn = dqs("#clearBtn");
+  const inputs = [dqs("#cameraInput"), dqs("#fileInput")];
+
+  (function note(){
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    dqs("#supportNote").textContent = isMobile
+      ? 'Tip: allow camera permissions to open the camera directly.'
+      : 'On desktop, camera capture may open a file dialog.';
+  })();
+
+  let processedBlob = null, processedName = null;
+
+  inputs.forEach(input => {
+    input.addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if(!file) return;
+      resetUI();
+      try{
+        const result = await prepareImage(file);
+        processedBlob = result.blob;
+        processedName = result.name;
+        renderPreview(URL.createObjectURL(processedBlob), processedBlob.size);
+        ok(`Ready to upload (${fmt(processedBlob.size)}).`);
+        uploadBtn.disabled = false;
+        clearBtn.disabled = false;
+      }catch(err){ errf(err.message || "Failed to process image."); }
+    });
+  });
+
+  clearBtn.addEventListener("click", () => resetUI(true));
+
+  uploadBtn.addEventListener("click", async () => {
+    if(!processedBlob) return;
+    uploadBtn.disabled = true;
+    statusEl.textContent = "Uploading…";
+    try{
+      const form = new FormData();
+      form.append(CONFIG.FIELD_NAME, processedBlob, processedName || "upload.jpg");
+      const res = await fetch(CONFIG.UPLOAD_URL, { method:"POST", body: form });
+      const data = await res.json().catch(()=>null);
+      if(!res.ok) throw new Error((data && data.error) || "Upload failed.");
+      ok("Upload complete ✅");
+      // If your app has a result page, you could redirect here with data.url
+      // location.href = "{{ url_for('index') }}?uploaded=" + encodeURIComponent(data.url);
+    }catch(err){ errf(err.message || "Upload failed."); }
+    finally{ uploadBtn.disabled = false; }
+  });
+
+  function resetUI(full){
+    statusEl.textContent = "";
+    previewEl.innerHTML = "";
+    uploadBtn.disabled = true;
+    clearBtn.disabled = true;
+    if(full){ inputs.forEach(i => i.value = ""); processedBlob = null; processedName = null; }
+  }
+  function renderPreview(src, size){
+    const wrap = document.createElement("div");
+    wrap.style = "position:relative;border-radius:12px;overflow:hidden;background:#0a121a;border:1px solid rgba(255,255,255,.08)";
+    const img = new Image(); img.src = src; img.alt = "Preview"; img.style = "width:100%;height:160px;object-fit:cover;display:block";
+    const badge = document.createElement("div");
+    badge.textContent = fmt(size);
+    badge.style = "position:absolute;top:8px;left:8px;background:#0b1926;color:#a9b6c7;font-size:11px;padding:4px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.12)";
+    wrap.appendChild(img); wrap.appendChild(badge); previewEl.appendChild(wrap);
+  }
+  function ok(m){ statusEl.style.color = "#29cc7a"; statusEl.textContent = m; }
+  function errf(m){ statusEl.style.color = "#ff6b6b"; statusEl.textContent = m; }
+
+  async function prepareImage(file){
+    if(!/^image\\//.test(file.type)) throw new Error("Please select an image file.");
+    const bitmap = await createImageBitmap(file).catch(()=>null);
+    if(!bitmap) throw new Error("Could not read image.");
+    const {canvas} = drawToMaxBox(bitmap, CONFIG.MAX_DIMENSION);
+
+    // If original already small and within limit and dimensions <= MAX_DIMENSION, keep it
+    if(file.size <= CONFIG.MAX_BYTES && Math.max(bitmap.width, bitmap.height) <= CONFIG.MAX_DIMENSION){
+      return { blob: file, name: safeName(file.name) };
+    }
+
+    let q = CONFIG.JPEG_QUALITY_START;
+    let blob = await canvasToBlob(canvas, "image/jpeg", q);
+    while(blob.size > CONFIG.MAX_BYTES && q >= CONFIG.JPEG_QUALITY_FLOOR){
+      q -= 0.06;
+      blob = await canvasToBlob(canvas, "image/jpeg", q);
+    }
+    if(blob.size > CONFIG.MAX_BYTES){
+      throw new Error(`Image too large after compression (${fmt(blob.size)}). Try a lower-res photo.`);
+    }
+    return { blob, name: (file.name || "photo").replace(/\\.[a-zA-Z0-9]+$/, "") + ".jpg" };
+  }
+
+  function drawToMaxBox(bitmap, max){
+    let {width, height} = bitmap;
+    if(width <= max && height <= max){
+      const c = new OffscreenCanvas(width, height); c.getContext("2d", {alpha:false}).drawImage(bitmap,0,0,width,height);
+      return { canvas: c };
+    }
+    const ratio = width/height;
+    if(width > height){ width = max; height = Math.round(max/ratio); }
+    else { height = max; width = Math.round(max*ratio); }
+    const c = new OffscreenCanvas(width, height); c.getContext("2d",{alpha:false}).drawImage(bitmap,0,0,width,height);
+    return { canvas: c };
+  }
+  function canvasToBlob(canvas, type, quality){
+    if(canvas.convertToBlob) return canvas.convertToBlob({type, quality});
+    return new Promise(r => (/** @type {any} */(canvas)).toBlob(r, type, quality));
+  }
+  function fmt(bytes){const u=['B','KB','MB','GB'];let i=0,n=bytes;while(n>=1024&&i<u.length-1){n/=1024;i++;}return `${n.toFixed(n>=100?0:n>=10?1:2)} ${u[i]}`;}
+  function safeName(n){return (n||"image").replace(/[^a-z0-9\\-_.]+/ig,'_') || "image.jpg";}
+</script>
+
