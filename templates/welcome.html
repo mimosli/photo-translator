@@ -124,7 +124,7 @@
   function errf(m){ statusEl.style.color = "#ff6b6b"; statusEl.textContent = m; }
 
   async function prepareImage(file){
-    if(!/^image\\//.test(file.type)) throw new Error("Please select an image file.");
+    if(!/^image\//.test(file.type)) throw new Error("Please select an image file.");
     const bitmap = await createImageBitmap(file).catch(()=>null);
     if(!bitmap) throw new Error("Could not read image.");
     const {canvas} = drawToMaxBox(bitmap, CONFIG.MAX_DIMENSION);

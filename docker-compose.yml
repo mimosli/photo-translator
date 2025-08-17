@@ -1,18 +1,30 @@
-version: '3.8'
+version: "3.8"
 
 services:
   web:
     build: .
     image: photo-translator:latest
     env_file:
-      - .env              # contains DEEPL_API_KEY, POSTGRES_USER etc.
+      - .env                      # your existing secrets (DEEPL_API_KEY, etc.)
+    environment:
+      # Runtime-tunable limits (no rebuild needed)
+      MAX_BYTES: "3145728"        # 3 * 1024 * 1024  (3 MB)
+      MAX_DIMENSION: "2200"       # max width/height in pixels
+      # Point the app to Postgres inside the compose network
+      DATABASE_URL: "postgresql://photo:secretpassword@db:5432/photodb"
+      # Where the app saves files (matches your Flask UPLOAD_FOLDER)
+      UPLOAD_DIR: "/app/static/uploads"
+    volumes:
+      # Persist uploaded files on the host
+      - ./static/uploads:/app/static/uploads
     ports:
       - "5001:5001"
     restart: always
     depends_on:
       - db
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5001/healthz"]
+      # NOTE: Make sure your image has curl. If not, add it in the Dockerfile or switch to wget.
+      test: ["CMD", "curl", "-fsS", "http://localhost:5001/healthz"]
       interval: 30s
       timeout: 5s
       retries: 3
