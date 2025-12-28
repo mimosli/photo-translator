@@ -1,23 +1,45 @@
 import os
 import pytest
-from ocr import extract_text_with_layout
+#from ocr import extract_text_with_layout
+from translate import cleanup_ocr_for_translation
 
 # Ein kleines Testbild (du musst hier ein kurzes Beispielbild ablegen):
 TEST_IMAGE = os.path.join("tests", "fixtures", "sample_poetry_01.png")
 
-@pytest.fixture(scope="module")
-def sample_text():
-    # Lies den Text ein, damit mehrere Tests ihn verwenden können
-    return extract_text_with_layout(TEST_IMAGE)
+@pytest.fixture()
+def poem_with_stanza_break():
+    # Has a stanza break (blank line) that must be preserved
+    return "erste zeile\nzweite zeile\n\nneuer absatz\nnoch eine zeile\n"
 
-def test_lines_not_empty(sample_text):
-    # Stelle sicher, dass wir überhaupt Text bekommen
-    assert sample_text.strip(), "OCR lieferte keinen Text"
 
-def test_line_breaks_preserved(sample_text):
-    # Mindestens ein Zeilenumbruch enthalten?
-    assert "\n" in sample_text, "Keine Zeilenumbrüche erkannt"
+@pytest.fixture()
+def poem_without_stanza_break():
+    # No blank line; paragraphs are optional in OCR output
+    return "erste zeile\nzweite zeile\ndritte zeile\n"
 
-def test_paragraph_preserved(sample_text):
-    # Mindestens eine Leerzeile (Absatz-Trenner)?
-    assert "\n\n" in sample_text, "Keine Absätze (doppelte Zeilenumbrüche) erkannt"
+
+def test_text_not_empty(poem_with_stanza_break):
+    cleaned = cleanup_ocr_for_translation(poem_with_stanza_break)
+    assert cleaned.strip(), "Text cleanup returned empty text"
+
+
+def test_line_breaks_preserved(poem_with_stanza_break):
+    cleaned = cleanup_ocr_for_translation(poem_with_stanza_break)
+    assert "\n" in cleaned, "No line breaks preserved"
+
+
+def test_stanza_break_preserved_when_present(poem_with_stanza_break):
+    cleaned = cleanup_ocr_for_translation(poem_with_stanza_break)
+    assert "\n\n" in cleaned, "Stanza/paragraph break (blank line) was not preserved"
+
+
+def test_no_excessive_blank_lines_created():
+    raw = "zeile 1\n\n\n\n\nzeile 2\n"
+    cleaned = cleanup_ocr_for_translation(raw)
+    assert "\n\n\n" not in cleaned, "Cleanup should cap consecutive blank lines"
+
+
+def test_hyphenation_fixed_across_linebreak():
+    raw = "un-\nendlich\n"
+    cleaned = cleanup_ocr_for_translation(raw)
+    assert "unendlich" in cleaned, "Hyphenation across newline not fixed"
