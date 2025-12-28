@@ -2,319 +2,820 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Photo Translator</title>
+
+  <style>
+    :root{
+      /* Palette (requested) */
+      --bg: #06130f;            /* dark green */
+      --panel: #0b1f18;         /* deep green panel */
+      --panel-2:#0e2a20;
+      --text: #ffffff;          /* white */
+      --muted:#c7d3cf;          /* cool gray/green */
+      --border: rgba(255,255,255,.10);
+
+      --pink:#ff4fb8;
+      --red:#ff3b3b;
+      --gold:#f7c948;
+
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --radius: 18px;
+
+      --focus: 0 0 0 3px rgba(247,201,72,.25);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      background:
+        radial-gradient(900px 500px at 20% 10%, rgba(255,79,184,.18), transparent 55%),
+        radial-gradient(900px 500px at 85% 20%, rgba(247,201,72,.16), transparent 55%),
+        radial-gradient(900px 500px at 45% 95%, rgba(255,59,59,.12), transparent 55%),
+        linear-gradient(180deg, #04110d, var(--bg));
+      color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    .container{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: clamp(16px, 4vw, 34px);
+      padding-bottom: 110px; /* room for sticky bar on mobile */
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(16px, 3.5vw, 28px);
+      backdrop-filter: blur(8px);
+    }
+
+    .hero{
+      display:grid;
+      gap: 10px;
+    }
+
+    .badge-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom: 6px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(11,31,24,.65);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .badge .dot{
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--gold);
+      box-shadow: 0 0 0 3px rgba(247,201,72,.18);
+    }
+
+    h1{
+      margin:0;
+      font-size: clamp(24px, 5.2vw, 40px);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .subhead{
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: clamp(14px, 2.2vw, 16px);
+      max-width: 70ch;
+    }
+
+    .quick-steps{
+      display:grid;
+      gap: 10px;
+      margin-top: 14px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    @media (max-width: 720px){
+      .quick-steps{ grid-template-columns: 1fr; }
+    }
+
+    .step{
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      padding: 12px 12px;
+      background: rgba(11,31,24,.55);
+      display:flex;
+      gap: 10px;
+      align-items:flex-start;
+      min-height: 62px;
+    }
+    .step .num{
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      display:grid;
+      place-items:center;
+      font-weight: 800;
+      color: #1a1200;
+      background: linear-gradient(180deg, var(--gold), #ffd97a);
+      flex: 0 0 auto;
+    }
+    .step b{
+      display:block;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+    .step span{
+      display:block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    /* Upload area */
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    @media (max-width: 920px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .panel{
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: rgba(11,31,24,.55);
+    }
+
+    .panel h2{
+      margin: 0 0 6px;
+      font-size: clamp(18px, 4.2vw, 24px);
+      letter-spacing: -0.01em;
+    }
+    .helper{
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .picker-row{
+      display:flex;
+      gap: 12px;
+      flex-wrap:wrap;
+      margin-top: 10px;
+    }
+
+    .pick{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255,255,255,.18);
+      background: rgba(14,42,32,.65);
+      cursor:pointer;
+      user-select:none;
+      color: var(--text);
+      transition: transform .08s ease, border-color .12s ease, background .12s ease;
+    }
+    .pick:hover{
+      transform: translateY(-1px);
+      border-color: rgba(247,201,72,.5);
+      background: rgba(14,42,32,.9);
+    }
+    .pick:active{ transform: translateY(0px); }
+    input[type="file"]{ display:none; }
+
+    .hint{
+      display:flex;
+      gap: 10px;
+      align-items:flex-start;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      margin-top: 12px;
+    }
+    .hint .lock{
+      width: 26px; height: 26px;
+      border-radius: 10px;
+      display:grid; place-items:center;
+      background: rgba(247,201,72,.16);
+      color: var(--gold);
+      flex: 0 0 auto;
+    }
+
+    /* Preview / status */
+    #preview{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .previewWrap{
+      position:relative;
+      border-radius: 16px;
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.25);
+    }
+    .previewWrap img{
+      width:100%;
+      height: 220px;
+      object-fit: cover;
+      display:block;
+    }
+    .pill{
+      position:absolute;
+      top:10px;
+      left:10px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.42);
+      border: 1px solid rgba(255,255,255,.15);
+      font-size: 12px;
+      color: var(--text);
+    }
+    .pill .spark{
+      width: 8px; height:8px; border-radius: 999px;
+      background: var(--pink);
+      box-shadow: 0 0 0 3px rgba(255,79,184,.18);
+    }
+
+    #status{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+      min-height: 20px;
+    }
+    .ok{ color: #68ffbe; }
+    .err{ color: #ff8a8a; }
+
+    /* Sticky action bar (mobile friendly) */
+    .actionbar{
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      padding: 12px;
+      background: linear-gradient(180deg, rgba(6,19,15,0), rgba(6,19,15,.85) 25%, rgba(6,19,15,.96));
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(255,255,255,.10);
+    }
+    .actionbar .inner{
+      max-width: 980px;
+      margin: 0 auto;
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      justify-content: space-between;
+    }
+    .actions{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+
+    button{
+      appearance:none;
+      border:0;
+      cursor:pointer;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 800;
+      letter-spacing: .01em;
+      transition: transform .08s ease, opacity .12s ease, filter .12s ease;
+      outline: none;
+    }
+    button:focus{ box-shadow: var(--focus); }
+
+    .btn-primary{
+      background: linear-gradient(180deg, var(--pink), #ff77cb);
+      color: #1b0613;
+    }
+    .btn-primary:hover{ filter: brightness(1.03); transform: translateY(-1px); }
+
+    .btn-secondary{
+      background: linear-gradient(180deg, var(--gold), #ffd97a);
+      color: #1a1200;
+    }
+    .btn-secondary:hover{ filter: brightness(1.03); transform: translateY(-1px); }
+
+    .btn-ghost{
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.16);
+      color: var(--text);
+    }
+    .btn-ghost:hover{ transform: translateY(-1px); }
+
+    button[disabled]{
+      opacity: .45;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* Small “progress” label */
+    .progress{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      color: var(--muted);
+      font-size: 13px;
+      min-width: 220px;
+    }
+    .meter{
+      height: 8px;
+      width: 130px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .meter > div{
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--red), var(--pink), var(--gold));
+      transition: width .18s ease;
+    }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce){
+      *{ transition:none !important; }
+    }
+  </style>
 </head>
-<body style="margin:0;background:#0b121a;color:#e8eef5;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial">
-<main class="container" style="max-width:920px;margin:0 auto;padding:clamp(16px,4vw,32px)">
 
-  <!-- Welcome / explanation -->
-  <section class="card" style="background:#0f1720;color:#e8eef5;border-radius:18px;padding:clamp(16px,3.5vw,28px);border:1px solid rgba(255,255,255,.06);box-shadow:0 10px 30px rgba(0,0,0,.35)">
-    <h1 style="margin:0 0 10px;font-size:clamp(22px,5.5vw,34px)">
-      Welcome to my helper technology for “my rollercoaster life”.
-      This will help you get the fullest experience of this three-language masterpiece. 📚
-    </h1>
-    <p style="color:#a9b6c7;line-height:1.55">
-      Snap a photo of your poetry and upload it securely. On your smartphone,
-      “Use camera” opens the camera directly (if your browser allows it).
-    </p>
-    <p style="color:#a9b6c7;line-height:1.55">
-      We automatically keep photos under the size limit for faster, safer uploads.
-    </p>
-  </section>
+<body>
+  <main class="container">
+    <!-- HERO -->
+    <section class="card hero" aria-label="Intro">
+      <div class="badge-row">
+        <span class="badge"><span class="dot"></span> three-language experience</span>
+        <span class="badge">📚 poetry photo translator</span>
+        <span class="badge">🔒 secure upload</span>
+      </div>
 
-  <!-- Capture / upload -->
-  <section class="card" style="margin-top:16px;background:#0f1720;color:#e8eef5;border-radius:18px;padding:clamp(16px,3.5vw,28px);border:1px solid rgba(255,255,255,.06);box-shadow:0 10px 30px rgba(0,0,0,.35)">
-    <h2 style="margin:0 0 10px;font-size:clamp(18px,4.5vw,24px)">Take a photo or upload an image</h2>
-    <p class="helper" style="color:#a9b6c7">
-      Max size <strong id="limit-label">…</strong>. We will resize if needed.
-    </p>
+      <h1>Translate your poem in seconds.</h1>
 
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin:10px 0">
-      <label for="cameraInput"
-             style="display:inline-flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#14212f;border:1px dashed rgba(255,255,255,.12);cursor:pointer">
-        📷 Use camera
-      </label>
-      <input id="cameraInput" type="file" accept="image/*" capture="environment" style="display:none" />
+      <p class="subhead">
+        Take a photo (or upload an image) of your poem and get a clean translation—fast, readable, and made for
+        the “my rollercoaster life” three-language journey.
+      </p>
 
-      <label for="fileInput"
-             style="display:inline-flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#14212f;border:1px dashed rgba(255,255,255,.12);cursor:pointer">
-        🖼️ Choose from photos
-      </label>
-      <input id="fileInput" type="file" accept="image/*" style="display:none" />
+      <div class="quick-steps" role="list" aria-label="How it works">
+        <div class="step" role="listitem">
+          <div class="num">1</div>
+          <div>
+            <b>Upload your poem</b>
+            <span>Use camera on mobile or pick a photo.</span>
+          </div>
+        </div>
+        <div class="step" role="listitem">
+          <div class="num">2</div>
+          <div>
+            <b>Review the preview</b>
+            <span>We auto-resize to fit the limit.</span>
+          </div>
+        </div>
+        <div class="step" role="listitem">
+          <div class="num">3</div>
+          <div>
+            <b>Translate</b>
+            <span>Get the result instantly.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAIN GRID -->
+    <section class="grid" style="margin-top:16px">
+      <!-- Left: Upload + Preview -->
+      <div class="panel" aria-label="Upload panel">
+        <h2>Upload your poem photo</h2>
+        <p class="helper">
+          Max size <strong id="limit-label">…</strong>. If needed, we’ll resize automatically for faster uploads.
+        </p>
+
+        <div class="picker-row" aria-label="Image pickers">
+          <label class="pick" for="cameraInput" title="Take a photo with your camera">
+            📷 <span><b>Take photo</b> <span style="display:block;color:var(--muted);font-size:12px;font-weight:600">best on mobile</span></span>
+          </label>
+          <input id="cameraInput" type="file" accept="image/*" capture="environment" />
+
+          <label class="pick" for="fileInput" title="Upload an existing image">
+            🖼️ <span><b>Upload image</b> <span style="display:block;color:var(--muted);font-size:12px;font-weight:600">from your device</span></span>
+          </label>
+          <input id="fileInput" type="file" accept="image/*" />
+        </div>
+
+        <div id="supportNote" class="hint" aria-live="polite">
+          <div class="lock">🛈</div>
+          <div>
+            <b style="color:var(--text)">Tip</b><br/>
+            On phones, your browser may ask for camera permission. On desktop, “Take photo” might open a file picker.
+          </div>
+        </div>
+
+        <div id="preview" aria-label="Preview"></div>
+        <div id="status" role="status" aria-live="polite"></div>
+
+        <div class="hint" style="margin-top:12px">
+          <div class="lock">🔒</div>
+          <div>
+            <b style="color:var(--text)">Privacy note</b><br/>
+            Your image is processed to translate your text. Keep personal details out of frame if you prefer.
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: What happens next / friendly guidance -->
+      <aside class="panel" aria-label="Guidance">
+        <h2 style="margin-bottom:10px">For best results</h2>
+        <p class="helper" style="margin-bottom:10px">
+          These small tweaks improve OCR accuracy (especially for handwriting).
+        </p>
+
+        <div class="step" style="margin-bottom:10px">
+          <div class="num" style="background:linear-gradient(180deg,var(--pink),#ff77cb);color:#220614">★</div>
+          <div>
+            <b>Good lighting</b>
+            <span>Avoid shadows and glare. Keep the page flat.</span>
+          </div>
+        </div>
+
+        <div class="step" style="margin-bottom:10px">
+          <div class="num" style="background:linear-gradient(180deg,var(--red),#ff7a7a);color:#240606">✦</div>
+          <div>
+            <b>Fill the frame</b>
+            <span>Zoom so the poem text is large and sharp.</span>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="num" style="background:linear-gradient(180deg,var(--gold),#ffd97a);color:#1a1200">✓</div>
+          <div>
+            <b>One page at a time</b>
+            <span>If it’s long, capture multiple photos.</span>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <!-- Sticky action bar -->
+  <footer class="actionbar" aria-label="Actions">
+    <div class="inner">
+      <div class="progress">
+        <span id="progressText">Step 1/3: Upload</span>
+        <div class="meter" aria-hidden="true"><div id="progressFill"></div></div>
+      </div>
+
+      <div class="actions">
+        <!-- Primary action = Translate -->
+        <button id="translateBtn" class="btn-primary" disabled title="Translate the selected image">
+          Translate ✨
+        </button>
+
+        <!-- Secondary action = Save only -->
+        <button id="uploadBtn" class="btn-secondary" disabled title="Upload only (save image)">
+          Save image
+        </button>
+
+        <!-- Tertiary = Clear -->
+        <button id="clearBtn" class="btn-ghost" disabled title="Remove selected image">
+          Remove
+        </button>
+      </div>
     </div>
+  </footer>
 
-    <!-- Actions -->
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px">
-      <button id="uploadBtn" disabled
-              style="padding:12px 16px;border-radius:12px;border:0;background:#46a1ff;color:#05121d;font-weight:700;cursor:pointer">
-        Upload (save only)
-      </button>
-      <button id="translateBtn" disabled
-              style="padding:12px 16px;border-radius:12px;border:0;background:#29cc7a;color:#05121d;font-weight:700;cursor:pointer">
-        Translate now
-      </button>
-      <button id="clearBtn" disabled
-              style="padding:12px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#1a2633;color:#e8eef5;cursor:pointer">
-        Clear
-      </button>
-    </div>
+  <script>
+    // ---- Client config (defaults; server overrides below) ----
+    const CONFIG = {
+      MAX_BYTES: 3 * 1024 * 1024,
+      MAX_DIMENSION: 2200,
+      JPEG_QUALITY_START: 0.88,
+      JPEG_QUALITY_FLOOR: 0.6,
+      API_CONFIG_URL: "{{ url_for('api_config') }}",
+      UPLOAD_URL: "{{ url_for('api_upload') }}",           // expects field "file"
+      TRANSLATE_URL: "{{ url_for('translate_image') }}",   // expects field "image"
+      FIELD_NAME: "file"
+    };
 
-    <div id="supportNote" style="color:#a9b6c7;font-size:13px;margin:10px 0 8px"></div>
-    <div id="preview" style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px"></div>
-    <div id="status" role="status" style="margin-top:10px;color:#a9b6c7"></div>
-  </section>
-</main>
-
-<script>
-  // ---- Client config (defaults; server overrides below) ----
-  const CONFIG = {
-    MAX_BYTES: 3 * 1024 * 1024,
-    MAX_DIMENSION: 2200,
-    JPEG_QUALITY_START: 0.88,
-    JPEG_QUALITY_FLOOR: 0.6,
-    API_CONFIG_URL: "{{ url_for('api_config') }}",
-    UPLOAD_URL: "{{ url_for('api_upload') }}",           // expects field "file"
-    TRANSLATE_URL: "{{ url_for('translate_image') }}",   // expects field "image"
-    FIELD_NAME: "file"
-  };
-
-  // Hydrate limits from server so UI matches backend policy
-  (async function hydrate(){
-    try{
-      const r = await fetch(CONFIG.API_CONFIG_URL);
-      if(r.ok){
-        const j = await r.json();
-        if(typeof j.maxBytes === "number") CONFIG.MAX_BYTES = j.maxBytes;
-        if(typeof j.maxDimension === "number") CONFIG.MAX_DIMENSION = j.maxDimension;
-      }
-    }catch(_){}
-    document.getElementById("limit-label").textContent =
-      (CONFIG.MAX_BYTES/1024/1024).toFixed(0) + " MB";
-  })();
-
-  const dqs = s => document.querySelector(s);
-  const statusEl     = dqs("#status");
-  const previewEl    = dqs("#preview");
-  const uploadBtn    = dqs("#uploadBtn");
-  const translateBtn = dqs("#translateBtn");
-  const clearBtn     = dqs("#clearBtn");
-  const inputs       = [dqs("#cameraInput"), dqs("#fileInput")];
-
-  // Small UX helper
-  (function note(){
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    dqs("#supportNote").textContent = isMobile
-      ? "Tip: allow camera permissions to open the camera directly."
-      : "On desktop, camera capture may open a file dialog.";
-  })();
-
-  let processedBlob = null, processedName = null;
-
-  // Input handlers
-  inputs.forEach(input => {
-    input.addEventListener("change", async (e) => {
-      const file = e.target.files && e.target.files[0];
-      if(!file) return;
-      resetUI();
+    // Hydrate limits from server so UI matches backend policy
+    (async function hydrate(){
       try{
-        const result = await prepareImage(file);
-        processedBlob = result.blob;
-        processedName = result.name;
-        renderPreview(URL.createObjectURL(processedBlob), processedBlob.size);
-        ok(`Ready (${fmt(processedBlob.size)}).`);
-        uploadBtn.disabled = false;
-        translateBtn.disabled = false;
-        clearBtn.disabled = false;
-      }catch(err){
-        errf(err.message || "Failed to process image.");
-      }
-    });
-  });
+        const r = await fetch(CONFIG.API_CONFIG_URL);
+        if(r.ok){
+          const j = await r.json();
+          if(typeof j.maxBytes === "number") CONFIG.MAX_BYTES = j.maxBytes;
+          if(typeof j.maxDimension === "number") CONFIG.MAX_DIMENSION = j.maxDimension;
+        }
+      }catch(_){}
+      document.getElementById("limit-label").textContent =
+        (CONFIG.MAX_BYTES/1024/1024).toFixed(0) + " MB";
+    })();
 
-  // Clear
-  clearBtn.addEventListener("click", () => resetUI(true));
+    const dqs = s => document.querySelector(s);
+    const statusEl     = dqs("#status");
+    const previewEl    = dqs("#preview");
+    const uploadBtn    = dqs("#uploadBtn");
+    const translateBtn = dqs("#translateBtn");
+    const clearBtn     = dqs("#clearBtn");
+    const inputs       = [dqs("#cameraInput"), dqs("#fileInput")];
 
-  // Upload (save only)
-  uploadBtn.addEventListener("click", async () => {
-    if(!processedBlob) return;
-    uploadBtn.disabled = true;
-    statusEl.style.color = "#a9b6c7";
-    statusEl.textContent = "Uploading…";
-    try{
-      const form = new FormData();
-      form.append(CONFIG.FIELD_NAME, processedBlob, processedName || "upload.jpg");
-      const res  = await fetch(CONFIG.UPLOAD_URL, { method:"POST", body: form });
-      const data = await res.json().catch(()=>null);
-      if(!res.ok) throw new Error((data && data.error) || `Upload failed (${res.status}).`);
-      ok("Upload complete ✅");
-      // If you want to show the saved image URL:
-      // console.log("Saved at", data.url);
-    }catch(err){
-      errf(err.message || "Upload failed.");
-    }finally{
-      uploadBtn.disabled = false;
-    }
-  });
+    const progressText = dqs("#progressText");
+    const progressFill = dqs("#progressFill");
 
-  // Translate now → posts to /translate with field "image", then renders returned HTML
-  translateBtn.addEventListener("click", async () => {
-    if(!processedBlob) return;
-    translateBtn.disabled = true;
-    statusEl.style.color = "#a9b6c7";
-    statusEl.textContent = "Translating…";
-    try{
-      const form = new FormData();
-      form.append("image", processedBlob, processedName || "photo.jpg"); // your /translate expects 'image'
-      const res  = await fetch(CONFIG.TRANSLATE_URL, { method:"POST", body: form });
-      const ct   = res.headers.get("content-type") || "";
-      const body = await res.text();
-      if(!res.ok) throw new Error(`Translate failed (${res.status}).`);
-      if(ct.includes("text/html")){
-        document.open(); document.write(body); document.close();
-      }else{
-        ok("Translated.");
-        console.log(body);
-      }
-    }catch(err){
-      errf(err.message || "Translation failed.");
-      translateBtn.disabled = false;
-    }
-  });
-
-  // ---------- Helpers ----------
-
-  function resetUI(full){
-    statusEl.textContent = "";
-    statusEl.style.color = "#a9b6c7";
-    previewEl.innerHTML = "";
-    uploadBtn.disabled = true;
-    translateBtn.disabled = true;
-    clearBtn.disabled = true;
-    if(full){
-      inputs.forEach(i => i.value = "");
-      processedBlob = null; processedName = null;
-    }
-  }
-
-  function renderPreview(src, size){
-    const wrap = document.createElement("div");
-    wrap.style = "position:relative;border-radius:12px;overflow:hidden;background:#0a121a;border:1px solid rgba(255,255,255,.08)";
-    const img = new Image();
-    img.src = src; img.alt = "Preview";
-    img.style = "width:100%;height:160px;object-fit:cover;display:block";
-    const badge = document.createElement("div");
-    badge.textContent = fmt(size);
-    badge.style = "position:absolute;top:8px;left:8px;background:#0b1926;color:#a9b6c7;font-size:11px;padding:4px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.12)";
-    wrap.appendChild(img); wrap.appendChild(badge); previewEl.appendChild(wrap);
-  }
-
-  function ok(m){ statusEl.style.color = "#29cc7a"; statusEl.textContent = m; }
-  function errf(m){ statusEl.style.color = "#ff6b6b"; statusEl.textContent = m; }
-
-  // Turn File → ImageBitmap (with fallback for browsers without createImageBitmap)
-  async function fileToBitmap(file){
-    if("createImageBitmap" in window){
-      try { return await createImageBitmap(file); } catch {}
-    }
-    // Fallback: decode via <img>
-    const dataUrl = await fileToDataURL(file);
-    return await imgToBitmap(dataUrl);
-  }
-  function fileToDataURL(file){
-    return new Promise((res, rej) => {
-      const fr = new FileReader();
-      fr.onload = () => res(fr.result);
-      fr.onerror = () => rej(new Error("Could not read image."));
-      fr.readAsDataURL(file);
-    });
-  }
-  function imgToBitmap(src){
-    return new Promise((res, rej) => {
-      const img = new Image();
-      img.onload = () => {
-        const c = document.createElement("canvas");
-        c.width = img.naturalWidth; c.height = img.naturalHeight;
-        const ctx = c.getContext("2d", { alpha:false });
-        ctx.drawImage(img, 0, 0);
-        // CanvasRenderingContext2D path: return a bitmap-like object
-        res({ width: c.width, height: c.height, _canvas: c });
+    function setProgress(step){
+      // step: 1..3
+      const map = {
+        1: { t: "Step 1/3: Upload", w: "0%" },
+        2: { t: "Step 2/3: Review", w: "50%" },
+        3: { t: "Step 3/3: Translate", w: "100%" },
       };
-      img.onerror = () => rej(new Error("Could not decode image."));
-      img.src = src;
-    });
-  }
-
-  // Resize into a bounding box (keeps aspect ratio)
-  function drawToMaxBox(bitmap, max){
-    let width = bitmap.width, height = bitmap.height;
-    if(width > max || height > max){
-      const ratio = width / height;
-      if(width >= height){ width = max; height = Math.round(max / ratio); }
-      else { height = max; width = Math.round(max * ratio); }
+      const v = map[step] || map[1];
+      progressText.textContent = v.t;
+      progressFill.style.width = v.w;
     }
-    const c = document.createElement("canvas");
-    c.width = width; c.height = height;
-    const ctx = c.getContext("2d", { alpha:false });
-    // If bitmap came from our fallback, it has _canvas; draw that.
-    if(bitmap._canvas){ ctx.drawImage(bitmap._canvas, 0, 0, width, height); }
-    else { ctx.drawImage(bitmap, 0, 0, width, height); }
-    return { canvas: c };
-  }
+    setProgress(1);
 
-  // Canvas → Blob with broad compatibility
-  function canvasToBlob(canvas, type, quality){
-    return new Promise((resolve, reject) => {
-      if(typeof canvas.toBlob === "function"){
-        canvas.toBlob(b => b ? resolve(b) : reject(new Error("Canvas toBlob() failed")), type, quality);
-      }else{
+    // Small UX helper note
+    (function note(){
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const noteEl = dqs("#supportNote");
+      noteEl.innerHTML = isMobile
+        ? '<div class="lock">🛈</div><div><b style="color:var(--text)">Tip</b><br/>Allow camera permissions so “Take photo” opens the camera directly.</div>'
+        : '<div class="lock">🛈</div><div><b style="color:var(--text)">Tip</b><br/>On desktop, “Take photo” may open a file picker (browser-dependent).</div>';
+    })();
+
+    let processedBlob = null, processedName = null;
+
+    // Input handlers
+    inputs.forEach(input => {
+      input.addEventListener("change", async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if(!file) return;
+        resetUI(false);
+        setProgress(1);
+        statusNeutral("Preparing your image…");
+
         try{
-          const dataUrl = canvas.toDataURL(type, quality);
-          const bin = atob(dataUrl.split(",")[1]);
-          const arr = new Uint8Array(bin.length);
-          for(let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
-          resolve(new Blob([arr], { type }));
-        }catch(e){ reject(e); }
+          const result = await prepareImage(file);
+          processedBlob = result.blob;
+          processedName = result.name;
+
+          renderPreview(URL.createObjectURL(processedBlob), processedBlob.size);
+          statusOk(`Ready to translate. (${fmt(processedBlob.size)})`);
+
+          uploadBtn.disabled = false;
+          translateBtn.disabled = false;
+          clearBtn.disabled = false;
+
+          setProgress(2);
+        }catch(err){
+          statusErr(err.message || "Failed to process image.");
+          resetUI(false);
+        }
+      });
+    });
+
+    // Clear
+    clearBtn.addEventListener("click", () => resetUI(true));
+
+    // Upload (save only)
+    uploadBtn.addEventListener("click", async () => {
+      if(!processedBlob) return;
+      uploadBtn.disabled = true;
+      translateBtn.disabled = true;
+      statusNeutral("Saving image…");
+
+      try{
+        const form = new FormData();
+        form.append(CONFIG.FIELD_NAME, processedBlob, processedName || "upload.jpg");
+        const res  = await fetch(CONFIG.UPLOAD_URL, { method:"POST", body: form });
+        const data = await res.json().catch(()=>null);
+        if(!res.ok) throw new Error((data && data.error) || `Upload failed (${res.status}).`);
+        statusOk("Saved ✅ You can still translate it now.");
+      }catch(err){
+        statusErr(err.message || "Upload failed.");
+      }finally{
+        uploadBtn.disabled = false;
+        translateBtn.disabled = !processedBlob;
       }
     });
-  }
 
-  function fmt(bytes){
-    const u=['B','KB','MB','GB']; let i=0,n=bytes;
-    while(n>=1024 && i<u.length-1){ n/=1024; i++; }
-    return `${n.toFixed(n>=100?0:n>=10?1:2)} ${u[i]}`;
-  }
-  function safeName(n){
-    const base = (n||"image").replace(/\.[a-zA-Z0-9]+$/, "");
-    return (base.replace(/[^a-z0-9\-_.]+/ig,'_') || "image") + ".jpg";
-  }
+    // Translate now → posts to /translate with field "image", then renders returned HTML
+    translateBtn.addEventListener("click", async () => {
+      if(!processedBlob) return;
+      translateBtn.disabled = true;
+      uploadBtn.disabled = true;
+      clearBtn.disabled = true;
 
-  // Main prepare function
-  async function prepareImage(file){
-    if(!file || !file.type || !file.type.startsWith('image/')){
-      throw new Error("Please select an image file.");
-    }
-    const bitmap = await fileToBitmap(file);
-    const { canvas } = drawToMaxBox(bitmap, CONFIG.MAX_DIMENSION);
+      setProgress(3);
+      statusNeutral("Translating…");
 
-    // If original is already small enough, keep it
-    if(file.size <= CONFIG.MAX_BYTES && Math.max(bitmap.width, bitmap.height) <= CONFIG.MAX_DIMENSION){
-      return { blob: file, name: safeName(file.name) };
+      try{
+        const form = new FormData();
+        form.append("image", processedBlob, processedName || "photo.jpg"); // your /translate expects 'image'
+        const res  = await fetch(CONFIG.TRANSLATE_URL, { method:"POST", body: form });
+        const ct   = res.headers.get("content-type") || "";
+        const body = await res.text();
+        if(!res.ok) throw new Error(`Translate failed (${res.status}).`);
+
+        // If the server returns HTML, navigate into it.
+        if(ct.includes("text/html")){
+          document.open(); document.write(body); document.close();
+        }else{
+          statusOk("Translation ready ✅");
+          console.log(body);
+          // Re-enable buttons if you stay on the page
+          translateBtn.disabled = false;
+          uploadBtn.disabled = false;
+          clearBtn.disabled = false;
+        }
+      }catch(err){
+        statusErr(err.message || "Translation failed.");
+        // keep ability to retry
+        translateBtn.disabled = false;
+        uploadBtn.disabled = false;
+        clearBtn.disabled = false;
+        setProgress(processedBlob ? 2 : 1);
+      }
+    });
+
+    // ---------- Helpers ----------
+    function resetUI(full){
+      statusEl.className = "";
+      statusEl.textContent = "";
+      previewEl.innerHTML = "";
+
+      uploadBtn.disabled = true;
+      translateBtn.disabled = true;
+      clearBtn.disabled = true;
+
+      if(full){
+        inputs.forEach(i => i.value = "");
+        processedBlob = null; processedName = null;
+        setProgress(1);
+        statusNeutral("");
+      }
     }
 
-    let q = CONFIG.JPEG_QUALITY_START;
-    let blob = await canvasToBlob(canvas, "image/jpeg", q);
-    while(blob.size > CONFIG.MAX_BYTES && q >= CONFIG.JPEG_QUALITY_FLOOR){
-      q = Math.max(CONFIG.JPEG_QUALITY_FLOOR, q - 0.06);
-      blob = await canvasToBlob(canvas, "image/jpeg", q);
+    function renderPreview(src, size){
+      const wrap = document.createElement("div");
+      wrap.className = "previewWrap";
+
+      const img = new Image();
+      img.src = src;
+      img.alt = "Preview of your uploaded poem";
+      wrap.appendChild(img);
+
+      const badge = document.createElement("div");
+      badge.className = "pill";
+      badge.innerHTML = `<span class="spark"></span> ${fmt(size)} • preview`;
+      wrap.appendChild(badge);
+
+      previewEl.appendChild(wrap);
     }
-    if(blob.size > CONFIG.MAX_BYTES){
-      throw new Error(`Image too large after compression (${fmt(blob.size)}). Try a lower-res photo.`);
+
+    function statusNeutral(m){
+      statusEl.className = "";
+      statusEl.textContent = m || "";
     }
-    return { blob, name: safeName(file.name) };
-  }
-</script>
+    function statusOk(m){
+      statusEl.className = "ok";
+      statusEl.textContent = m;
+    }
+    function statusErr(m){
+      statusEl.className = "err";
+      statusEl.textContent = m;
+    }
+
+    // Turn File → ImageBitmap (with fallback for browsers without createImageBitmap)
+    async function fileToBitmap(file){
+      if("createImageBitmap" in window){
+        try { return await createImageBitmap(file); } catch {}
+      }
+      // Fallback: decode via <img>
+      const dataUrl = await fileToDataURL(file);
+      return await imgToBitmap(dataUrl);
+    }
+    function fileToDataURL(file){
+      return new Promise((res, rej) => {
+        const fr = new FileReader();
+        fr.onload = () => res(fr.result);
+        fr.onerror = () => rej(new Error("Could not read image."));
+        fr.readAsDataURL(file);
+      });
+    }
+    function imgToBitmap(src){
+      return new Promise((res, rej) => {
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement("canvas");
+          c.width = img.naturalWidth; c.height = img.naturalHeight;
+          const ctx = c.getContext("2d", { alpha:false });
+          ctx.drawImage(img, 0, 0);
+          res({ width: c.width, height: c.height, _canvas: c });
+        };
+        img.onerror = () => rej(new Error("Could not decode image."));
+        img.src = src;
+      });
+    }
+
+    // Resize into a bounding box (keeps aspect ratio)
+    function drawToMaxBox(bitmap, max){
+      let width = bitmap.width, height = bitmap.height;
+      if(width > max || height > max){
+        const ratio = width / height;
+        if(width >= height){ width = max; height = Math.round(max / ratio); }
+        else { height = max; width = Math.round(max * ratio); }
+      }
+      const c = document.createElement("canvas");
+      c.width = width; c.height = height;
+      const ctx = c.getContext("2d", { alpha:false });
+      if(bitmap._canvas){ ctx.drawImage(bitmap._canvas, 0, 0, width, height); }
+      else { ctx.drawImage(bitmap, 0, 0, width, height); }
+      return { canvas: c };
+    }
+
+    // Canvas → Blob with broad compatibility
+    function canvasToBlob(canvas, type, quality){
+      return new Promise((resolve, reject) => {
+        if(typeof canvas.toBlob === "function"){
+          canvas.toBlob(b => b ? resolve(b) : reject(new Error("Canvas toBlob() failed")), type, quality);
+        }else{
+          try{
+            const dataUrl = canvas.toDataURL(type, quality);
+            const bin = atob(dataUrl.split(",")[1]);
+            const arr = new Uint8Array(bin.length);
+            for(let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
+            resolve(new Blob([arr], { type }));
+          }catch(e){ reject(e); }
+        }
+      });
+    }
+
+    function fmt(bytes){
+      const u=['B','KB','MB','GB']; let i=0,n=bytes;
+      while(n>=1024 && i<u.length-1){ n/=1024; i++; }
+      return `${n.toFixed(n>=100?0:n>=10?1:2)} ${u[i]}`;
+    }
+    function safeName(n){
+      const base = (n||"image").replace(/\.[a-zA-Z0-9]+$/, "");
+      return (base.replace(/[^a-z0-9\-_.]+/ig,'_') || "image") + ".jpg";
+    }
+
+    // Main prepare function
+    async function prepareImage(file){
+      if(!file || !file.type || !file.type.startsWith('image/')){
+        throw new Error("Please select an image file.");
+      }
+      const bitmap = await fileToBitmap(file);
+      const { canvas } = drawToMaxBox(bitmap, CONFIG.MAX_DIMENSION);
+
+      // If original is already small enough, keep it
+      if(file.size <= CONFIG.MAX_BYTES && Math.max(bitmap.width, bitmap.height) <= CONFIG.MAX_DIMENSION){
+        return { blob: file, name: safeName(file.name) };
+      }
+
+      let q = CONFIG.JPEG_QUALITY_START;
+      let blob = await canvasToBlob(canvas, "image/jpeg", q);
+      while(blob.size > CONFIG.MAX_BYTES && q >= CONFIG.JPEG_QUALITY_FLOOR){
+        q = Math.max(CONFIG.JPEG_QUALITY_FLOOR, q - 0.06);
+        blob = await canvasToBlob(canvas, "image/jpeg", q);
+      }
+      if(blob.size > CONFIG.MAX_BYTES){
+        throw new Error(`Image too large after compression (${fmt(blob.size)}). Try a lower-res photo.`);
+      }
+      return { blob, name: safeName(file.name) };
+    }
+  </script>
 </body>
 </html>
