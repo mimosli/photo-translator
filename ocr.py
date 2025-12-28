@@ -187,11 +187,18 @@ def _deskew(gray: np.ndarray) -> np.ndarray:
     M = cv2.getRotationMatrix2D((w // 2, h // 2), angle, 1.0)
     return cv2.warpAffine(gray, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
 
+def _enhance_contrast(gray: np.ndarray) -> np.ndarray:
+    """CLAHE contrast boost – great for printed pages."""
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    return clahe.apply(gray)
 
 def _preprocess_candidates(image_path: str) -> list[np.ndarray]:
     bgr = cv2.imread(image_path)
     if bgr is None:
         raise ValueError(f"Cannot read image: {image_path}")
+    
+    # Use page warp here too (helps book photos)
+    bgr = _try_page_warp(bgr)
 
     gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
 
