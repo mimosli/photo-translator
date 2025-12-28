@@ -19,7 +19,10 @@ services:
       UPLOAD_DIR: "/app/static/uploads"
     volumes:
       # Persist uploaded files on the host
+      - ./templates:/app/templates
+      - ./static:/app/static
       - ./static/uploads:/app/static/uploads
+      
     ports:
       - "5001:5001"
     restart: always

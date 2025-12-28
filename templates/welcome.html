@@ -423,7 +423,18 @@
 
         <div class="picker-row" aria-label="Image pickers">
           <label class="pick" for="cameraInput" title="Take a photo with your camera">
-            📷 <span><b>Take photo</b> <span style="display:block;color:var(--muted);font-size:12px;font-weight:600">best on mobile</span></span>
+            📷 <span><b>Take photo</b> <span style="
+         display:inline-flex;
+         align-items:center;
+         gap:10px;
+         padding:12px 16px;
+         border-radius:14px;
+         background:linear-gradient(180deg,#ff4fb8,#ff77cb);
+         color:#1b0613;
+         font-weight:700;
+         border:0;
+         cursor:pointer;
+         box-shadow:0 8px 22px rgba(255,79,184,.35);">best on mobile</span></span>
           </label>
           <input id="cameraInput" type="file" accept="image/*" capture="environment" />
 

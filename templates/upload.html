@@ -1,98 +1,167 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <title>Upload Image</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            padding: 2rem;
-        }
-        .upload-container {
-            max-width: 400px;
-            margin: auto;
-            padding: 2rem;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            text-align: center;
-        }
-        input[type="file"] {
-            display: none;
-        }
-        .upload-label {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #4285f4;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-bottom: 1rem;
-        }
-        .submit-btn {
-            padding: 10px 20px;
-            background-color: #34a853;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .submit-btn:hover {
-            background-color: #2c8c46;
-        }
-        #preview {
-            margin: 1rem 0;
-            text-align: center;
-        }
-        #preview img {
-            max-width: 100%;
-            max-height: 200px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 5px;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <title>Upload poem photo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+  <style>
+    :root{
+      --bg:#06130f;
+      --panel:#0b1f18;
+      --text:#ffffff;
+      --muted:#c7d3cf;
+      --pink:#ff4fb8;
+      --gold:#f7c948;
+      --border:rgba(255,255,255,.12);
+      --radius:18px;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      background:
+        radial-gradient(800px 400px at 20% 10%, rgba(255,79,184,.18), transparent 55%),
+        radial-gradient(800px 400px at 80% 90%, rgba(247,201,72,.14), transparent 55%),
+        linear-gradient(180deg,#04110d,var(--bg));
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .card{
+      max-width:420px;
+      width:100%;
+      background:rgba(11,31,24,.7);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:28px;
+      box-shadow:0 20px 60px rgba(0,0,0,.45);
+      text-align:center;
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size:26px;
+      letter-spacing:-.02em;
+    }
+
+    p{
+      margin:0 0 18px;
+      color:var(--muted);
+      line-height:1.5;
+      font-size:15px;
+    }
+
+    input[type="file"]{ display:none; }
+
+    .pick{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:14px 18px;
+      border-radius:16px;
+      background:linear-gradient(180deg,var(--pink),#ff77cb);
+      color:#1b0613;
+      font-weight:800;
+      cursor:pointer;
+      box-shadow:0 10px 28px rgba(255,79,184,.35);
+      margin-bottom:14px;
+    }
+
+    .pick:hover{
+      filter:brightness(1.05);
+    }
+
+    #preview{
+      margin-top:16px;
+    }
+
+    #preview img{
+      max-width:100%;
+      border-radius:14px;
+      border:1px solid var(--border);
+    }
+
+    .submit-btn{
+      margin-top:16px;
+      width:100%;
+      padding:14px 16px;
+      border-radius:14px;
+      border:0;
+      background:linear-gradient(180deg,var(--gold),#ffd97a);
+      color:#1a1200;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .submit-btn:disabled{
+      opacity:.5;
+      cursor:not-allowed;
+    }
+
+    .back{
+      display:inline-block;
+      margin-top:16px;
+      color:var(--muted);
+      font-size:14px;
+      text-decoration:none;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="upload-container">
-        <h1>Upload an Image</h1>
-        <form id="uploadForm" method="POST" action="{{ url_for('translate_image') }}" enctype="multipart/form-data">
-            <label for="file-upload" class="upload-label">Choose Image</label>
-            <input id="file-upload" type="file" name="image" accept="image/*" required>
+  <div class="card">
+    <h1>Upload your poem</h1>
+    <p>
+      Choose a photo of your handwritten or printed poetry.
+      We’ll translate it instantly.
+    </p>
 
-            <!-- Preview area -->
-            <div id="preview"></div>
+    <form id="uploadForm" method="POST"
+          action="{{ url_for('translate_image') }}"
+          enctype="multipart/form-data">
 
-            <input class="submit-btn" type="submit" value="Upload & Translate">
-        </form>
-    </div>
+      <label for="file-upload" class="pick">
+        📷 Choose image
+      </label>
+      <input id="file-upload" type="file" name="image" accept="image/*" required>
 
-    <script>
-        const fileInput = document.getElementById('file-upload');
-        const preview = document.getElementById('preview');
-        const form = document.getElementById('uploadForm');
+      <div id="preview"></div>
 
-        // Show image preview
-        fileInput.addEventListener('change', () => {
-            preview.innerHTML = '';
-            const file = fileInput.files[0];
-            if (!file) return;
-            if (!file.type.startsWith('image/')) {
-                alert('Please select a valid image file.');
-                fileInput.value = '';
-                return;
-            }
-            const img = document.createElement('img');
-            img.src = URL.createObjectURL(file);
-            preview.appendChild(img);
-        });
+      <button class="submit-btn" type="submit" disabled>
+        Translate ✨
+      </button>
+    </form>
 
-        // Prevent submit without a file
-        form.addEventListener('submit', (evt) => {
-            if (!fileInput.files.length) {
-                evt.preventDefault();
-                alert('You must select an image before uploading.');
-            }
-        });
-    </script>
+    <a class="back" href="{{ url_for('upload_form') }}">
+      ← Back
+    </a>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('file-upload');
+    const preview = document.getElementById('preview');
+    const submitBtn = document.querySelector('.submit-btn');
+
+    fileInput.addEventListener('change', () => {
+      preview.innerHTML = '';
+      submitBtn.disabled = true;
+
+      const file = fileInput.files[0];
+      if(!file || !file.type.startsWith('image/')) return;
+
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      preview.appendChild(img);
+
+      submitBtn.disabled = false;
+    });
+  </script>
 </body>
 </html>
