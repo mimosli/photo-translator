@@ -298,6 +298,10 @@ def translate_image():
         log.exception("translation_failed")
         translation_error = str(e)[:200]
 
+    ip = request.headers.get("X-Forwarded-For", "").split(",")[0].strip() or request.remote_addr or "0.0.0.0"
+    country = get_country_from_ip(ip)
+    ua = request.headers.get("User-Agent", "")
+
     # Metadata log + DB best-effort
     log.info(
         f"upload_metadata: {{'client_ip': '{ip}', 'filename': '{filename}', 'user_agent': '{ua}', 'country': '{country}'}}"

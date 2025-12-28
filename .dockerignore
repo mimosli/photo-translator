@@ -5,3 +5,12 @@ venv/
 *.pyc
 static/uploads/
 .DS_Store
+cat > .dockerignore <<'EOF'
+*.pyo
+*.pyd
+.git/
+.gitignore
+static/uploads/
+node_modules/
+.DS_Store
+EOF
