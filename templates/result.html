@@ -39,7 +39,7 @@
 
         <div class="image-display">
             <p><strong>Originalbild:</strong></p>
-            <img src="{{ original_image }}" alt="Hochgeladenes Bild" width="400">
+            <img src="{{ url_for('static', filename=original_image) }}" alt="Hochgeladenes Bild">
         </div>
 
         <div class="text-box">

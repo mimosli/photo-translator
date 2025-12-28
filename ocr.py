@@ -166,26 +166,35 @@ def _mean_conf(data: dict) -> float:
             pass
     return float(np.mean(confs)) if confs else 0.0
 
-def _deskew(gray: np.ndarray) -> np.ndarray:
-    # Estimate skew with Otsu + minAreaRect
+def _deskew(gray: np.ndarray, max_abs_angle: float = 12.0) -> np.ndarray:
+    """
+    Deskew only for small angles. Prevents accidental ~90° rotations
+    that happen with tiny images / screenshots.
+    """
     _, th = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     inv = 255 - th
     coords = np.column_stack(np.where(inv > 0))
     if coords.size < 300:
         return gray
 
-    angle = cv2.minAreaRect(coords)[-1]
-    if angle < -45:
-        angle = -(90 + angle)
-    else:
-        angle = -angle
+    angle = cv2.minAreaRect(coords)[-1]  # in [-90, 0)
 
-    if abs(angle) < 0.7:
+    # Convert to a human angle (roughly) in degrees
+    if angle < -45:
+        angle = 90 + angle
+    angle = -angle
+
+    # Don't rotate if it's too small or suspiciously large
+    if abs(angle) < 0.7 or abs(angle) > max_abs_angle:
         return gray
 
     h, w = gray.shape[:2]
     M = cv2.getRotationMatrix2D((w // 2, h // 2), angle, 1.0)
-    return cv2.warpAffine(gray, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+    return cv2.warpAffine(
+        gray, M, (w, h),
+        flags=cv2.INTER_CUBIC,
+        borderMode=cv2.BORDER_REPLICATE
+    )
 
 def _enhance_contrast(gray: np.ndarray) -> np.ndarray:
     """CLAHE contrast boost – great for printed pages."""
@@ -196,38 +205,55 @@ def _preprocess_candidates(image_path: str) -> list[np.ndarray]:
     bgr = cv2.imread(image_path)
     if bgr is None:
         raise ValueError(f"Cannot read image: {image_path}")
-    
-    # Use page warp here too (helps book photos)
-    bgr = _try_page_warp(bgr)
+
+    h, w = bgr.shape[:2]
+
+    # Page-warp only makes sense for real page photos (not small screenshots)
+    if max(h, w) >= 900:
+        bgr = _try_page_warp(bgr)
 
     gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
 
-    # denoise while preserving edges
-    gray = cv2.fastNlMeansDenoising(gray, h=12)
-    gray = _enhance_contrast(gray)
-    gray = _deskew(gray)
+    # Upscale small inputs (your example image is tiny)
+    maxdim = max(gray.shape[:2])
+    if maxdim < 1200:
+        scale = min(4.0, 1400.0 / maxdim)
+        gray = cv2.resize(
+            gray,
+            (int(gray.shape[1] * scale), int(gray.shape[0] * scale)),
+            interpolation=cv2.INTER_CUBIC
+        )
 
-    # Candidate A: grayscale (often best for printed text)
+    # Mild denoise (don’t overdo it)
+    gray = cv2.fastNlMeansDenoising(gray, h=8)
+
+    # Safe deskew (won’t rotate 90°)
+    gray_deskew = _deskew(gray, max_abs_angle=12.0)
+
+    # Candidate A: grayscale
     cand_gray = gray
 
-    # Candidate B: Otsu (clean binary)
-    _, cand_otsu = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # Candidate B: grayscale deskewed
+    cand_gray_d = gray_deskew
 
-    # Candidate C: Adaptive (better for uneven lighting)
+    # Candidate C: Otsu
+    _, cand_otsu = cv2.threshold(gray_deskew, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    # Candidate D: Adaptive
     cand_adapt = cv2.adaptiveThreshold(
-        gray, 255,
+        gray_deskew, 255,
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv2.THRESH_BINARY,
         blockSize=31,
         C=9
     )
 
-    # Tiny close to connect broken strokes (light touch)
+    # Light close
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
     cand_otsu = cv2.morphologyEx(cand_otsu, cv2.MORPH_CLOSE, kernel, iterations=1)
     cand_adapt = cv2.morphologyEx(cand_adapt, cv2.MORPH_CLOSE, kernel, iterations=1)
 
-    return [cand_gray, cand_otsu, cand_adapt]
+    return [cand_gray, cand_gray_d, cand_otsu, cand_adapt]
 
 def _maybe_upscale(gray: np.ndarray, settings: OcrSettings) -> np.ndarray:
     if not settings.upscale_if_small:

@@ -145,6 +145,31 @@ def db_insert_upload(filename: str, client_ip: str, user_agent: str, country: st
     except Exception as e:
         log.warning(f"upload_db_insert_failed: {e}")
 
+def _save_normalized_image(file_storage, out_path: str) -> int:
+    """
+    Load via PIL, auto-rotate (EXIF), convert to RGB, resize, and save as JPEG.
+    Returns bytes written.
+    """
+    try:
+        img = Image.open(file_storage.stream)
+    except Exception:
+        raise ValueError("Invalid image")
+
+    try:
+        img = ImageOps.exif_transpose(img).convert("RGB")
+    except Exception:
+        img = img.convert("RGB")
+
+    img.thumbnail((MAX_DIMENSION, MAX_DIMENSION))
+
+    jpeg_bytes = _compress_to_jpeg_under_limit(img, MAX_BYTES)
+    if len(jpeg_bytes) > MAX_BYTES:
+        raise ValueError("Image too large after compression")
+
+    with open(out_path, "wb") as f:
+        f.write(jpeg_bytes)
+
+    return len(jpeg_bytes)
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Errors
@@ -243,16 +268,14 @@ def translate_image():
 
     # Save input file
     original_name = secure_filename(f.filename or "photo.jpg")
-    if "." not in original_name:
-        original_name += ".jpg"
-    base, ext = os.path.splitext(original_name)
-    filename = f"{base}_{int(time.time())}_{uuid4().hex[:6]}{ext}"
+    base, _ = os.path.splitext(original_name)
+    filename = f"{base}_{int(time.time())}_{uuid4().hex[:6]}.jpg"  # force jpg
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    f.save(filepath)
 
-    ip = request.remote_addr or "0.0.0.0"
-    country = get_country_from_ip(ip)
-    ua = request.headers.get("User-Agent", "")
+    try:
+        _save_normalized_image(f, filepath)
+    except ValueError as e:
+        return str(e), 400
 
     # OCR
     german_text = ""
@@ -284,7 +307,7 @@ def translate_image():
     # Render result
     return render_template(
         "result.html",
-        original_image=url_for("static", filename=f"uploads/{filename}"),
+        original_image = f"uploads/{filename}",
         extracted_text=german_text,
         translated_text=translated_text,
         ocr_error=ocr_error,
