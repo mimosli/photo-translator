@@ -1,58 +1,121 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
-    <meta charset="utf-8" />
-    <title>Übersetzungsergebnis</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            padding: 2rem;
-        }
-        .container {
-            max-width: 800px;
-            margin: auto;
-        }
-        .image-display {
-            margin-bottom: 1rem;
-        }
-        .text-box {
-            background-color: #f7f7f7;
-            padding: 1rem;
-            border-radius: 5px;
-            margin-bottom: 1.5rem;
-            white-space: pre-wrap; /* Zeilenumbrüche sichtbar machen */
-        }
-        h1 {
-            margin-bottom: 1rem;
-        }
-        a.back-link {
-            text-decoration: none;
-            color: #4285f4;
-            margin-top: 2rem;
-            display: inline-block;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Übersetzungsergebnis</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --panel: #f7f7f7;
+      --text: #111;
+      --muted: #666;
+      --border: #e5e5e5;
+      --link: #1a73e8;
+      --danger: #b00020;
+      --radius: 10px;
+    }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 24px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 { margin: 0 0 16px; }
+    .muted { color: var(--muted); }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin: 16px 0;
+    }
+
+    .image-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+
+    .label {
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    pre {
+      margin: 0;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    .error {
+      color: var(--danger);
+      font-weight: 600;
+      margin: 8px 0 0;
+    }
+
+    .actions {
+      margin-top: 18px;
+    }
+    a.back-link {
+      text-decoration: none;
+      color: var(--link);
+      font-weight: 600;
+    }
+    a.back-link:hover { text-decoration: underline; }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Übersetzungsergebnis</h1>
+  <div class="container">
+    <h1>Übersetzungsergebnis</h1>
+    <p class="muted">OCR + Übersetzung aus deinem hochgeladenen Bild.</p>
 
-        <div class="image-display">
-            <p><strong>Originalbild:</strong></p>
-            <img src="{{ url_for('static', filename=original_image) }}" alt="Hochgeladenes Bild">
-        </div>
+    <div class="card image-wrap">
+      <div class="label">Originalbild</div>
 
-        <div class="text-box">
-            <h2>Erkannter deutscher Text:</h2>
-            <p>{{ extracted_text }}</p>
-        </div>
-
-        <div class="text-box">
-            <h2>Übersetzung ins Englische:</h2>
-            <p>{{ translated_text }}</p>
-        </div>
-
-        <a href="{{ url_for('upload_form') }}" class="back-link">&larr; Neues Bild hochladen</a>
+      <!-- IMPORTANT: original_image is already a URL like /static/uploads/xxx.jpg -->
+      <img src="{{ original_image }}" alt="Hochgeladenes Bild">
     </div>
+
+    <div class="card">
+      <div class="label">Erkannter deutscher Text</div>
+
+      {% if ocr_error %}
+        <p class="error">OCR Hinweis: {{ ocr_error }}</p>
+      {% endif %}
+
+      <pre>{{ extracted_text }}</pre>
+    </div>
+
+    <div class="card">
+      <div class="label">Übersetzung ins Englische</div>
+
+      {% if translation_error %}
+        <p class="error">Übersetzung Hinweis: {{ translation_error }}</p>
+      {% endif %}
+
+      <pre>{{ translated_text }}</pre>
+    </div>
+
+    <div class="actions">
+      <a href="{{ url_for('upload_form') }}" class="back-link">&larr; Neues Bild hochladen</a>
+    </div>
+  </div>
 </body>
 </html>
