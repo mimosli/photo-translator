@@ -1,357 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8" />
-  <title>Translation Result</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-
-  <style>
-    :root{
-      --bg:#06130f;              /* dark green */
-      --panel:#0b1f18;
-      --panel2:#0e2a20;
-      --text:#ffffff;
-      --muted:#c7d3cf;
-      --border:rgba(255,255,255,.12);
-
-      --pink:#ff4fb8;
-      --red:#ff3b3b;
-      --gold:#f7c948;
-
-      --radius:18px;
-      --shadow:0 20px 60px rgba(0,0,0,.45);
-    }
-
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      min-height:100vh;
-      background:
-        radial-gradient(900px 500px at 20% 10%, rgba(255,79,184,.18), transparent 55%),
-        radial-gradient(900px 500px at 85% 20%, rgba(247,201,72,.16), transparent 55%),
-        radial-gradient(900px 500px at 45% 95%, rgba(255,59,59,.12), transparent 55%),
-        linear-gradient(180deg,#04110d,var(--bg));
-      color:var(--text);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-      padding: clamp(16px, 4vw, 34px);
-    }
-
-    .container{
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    .topbar{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-bottom: 14px;
-    }
-
-    h1{
-      margin:0;
-      font-size: clamp(22px, 4.5vw, 34px);
-      letter-spacing:-.02em;
-      line-height:1.1;
-    }
-
-    .subtitle{
-      margin: 6px 0 0;
-      color: var(--muted);
-      line-height:1.5;
-      max-width: 70ch;
-      font-size: 14px;
-    }
-
-    .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:flex-end;
-    }
-
-    .btn{
-      appearance:none;
-      border:0;
-      cursor:pointer;
-      border-radius: 14px;
-      padding: 12px 14px;
-      font-weight: 800;
-      letter-spacing: .01em;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      transition: transform .08s ease, filter .12s ease, opacity .12s ease;
-      user-select:none;
-      white-space:nowrap;
-    }
-    .btn:hover{ transform: translateY(-1px); filter: brightness(1.04); }
-    .btn:active{ transform: translateY(0); }
-
-    .btn-primary{
-      background: linear-gradient(180deg, var(--pink), #ff77cb);
-      color:#1b0613;
-      box-shadow: 0 10px 28px rgba(255,79,184,.30);
-    }
-
-    .btn-secondary{
-      background: linear-gradient(180deg, var(--gold), #ffd97a);
-      color:#1a1200;
-      box-shadow: 0 10px 28px rgba(247,201,72,.22);
-    }
-
-    .btn-ghost{
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      border: 1px solid rgba(255,255,255,.16);
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    @media (max-width: 980px){
-      .grid{ grid-template-columns: 1fr; }
-      .actions{ justify-content:flex-start; }
-    }
-
-    .card{
-      background: rgba(11,31,24,.70);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 18px;
-      overflow:hidden;
-    }
-
-    .card h2{
-      margin: 0 0 10px;
-      font-size: 16px;
-      letter-spacing: .01em;
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-
-    .tag{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.12);
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .tag .dot{
-      width: 8px; height:8px; border-radius:999px;
-      background: var(--gold);
-      box-shadow: 0 0 0 3px rgba(247,201,72,.16);
-    }
-
-    .imageWrap{
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.12);
-      overflow:hidden;
-      background: rgba(0,0,0,.25);
-    }
-    .imageWrap img{
-      width: 100%;
-      height: auto;
-      display:block;
-    }
-
-    .copyRow{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top: 10px;
-    }
-
-    .copyBtn{
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      border: 1px solid rgba(255,255,255,.14);
-      padding: 10px 12px;
-      border-radius: 12px;
-      cursor:pointer;
-      font-weight: 800;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-    }
-    .copyBtn:hover{ filter: brightness(1.06); transform: translateY(-1px); }
-    .copyBtn:active{ transform: translateY(0); }
-
-    .textBox{
-      background: rgba(14,42,32,.55);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 16px;
-      padding: 14px;
-      line-height: 1.55;
-      color: var(--text);
-      white-space: pre-wrap;
-      font-size: 14px;
-      max-height: 420px;
-      overflow:auto;
-    }
-
-    .labelRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-      flex-wrap:wrap;
-      margin-bottom: 10px;
-    }
-
-    .smallHint{
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    /* subtle scrollbar in WebKit */
-    .textBox::-webkit-scrollbar{ height:10px; width:10px; }
-    .textBox::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.12); border-radius: 999px; }
-    .textBox::-webkit-scrollbar-track{ background: rgba(255,255,255,.04); border-radius: 999px; }
-
-    .toast{
-      position: fixed;
-      left: 50%;
-      bottom: 16px;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,.55);
-      border: 1px solid rgba(255,255,255,.14);
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 999px;
-      font-weight: 800;
-      opacity: 0;
-      pointer-events:none;
-      transition: opacity .15s ease, transform .15s ease;
-      backdrop-filter: blur(10px);
-    }
-    .toast.show{
-      opacity: 1;
-      transform: translateX(-50%) translateY(-4px);
-    }
-  </style>
+    <meta charset="utf-8" />
+    <title>Übersetzungsergebnis</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .image-display {
+            margin-bottom: 1rem;
+        }
+        .text-box {
+            background-color: #f7f7f7;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+            white-space: pre-wrap; /* Zeilenumbrüche sichtbar machen */
+        }
+        h1 {
+            margin-bottom: 1rem;
+        }
+        a.back-link {
+            text-decoration: none;
+            color: #4285f4;
+            margin-top: 2rem;
+            display: inline-block;
+        }
+    </style>
 </head>
-
 <body>
-  <main class="container">
-    <div class="topbar">
-      <div>
-        <h1>Translation Result</h1>
-        <p class="subtitle">
-          Below you’ll find the original photo, the detected German text, and the English translation.
-          You can copy either text with one click.
-        </p>
-      </div>
+    <div class="container">
+        <h1>Übersetzungsergebnis</h1>
 
-      <div class="actions">
-        <a class="btn btn-primary" href="{{ url_for('upload_form') }}">📷 New photo</a>
-        <button class="btn btn-secondary" id="scrollToTranslation" type="button">✨ Jump to translation</button>
-        <button class="btn btn-ghost" id="scrollToTop" type="button">↑ Top</button>
-      </div>
+        <div class="image-display">
+            <p><strong>Originalbild:</strong></p>
+            <img src="{{ original_image }}" alt="Hochgeladenes Bild" width="400">
+        </div>
+
+        <div class="text-box">
+            <h2>Erkannter deutscher Text:</h2>
+            <p>{{ extracted_text }}</p>
+        </div>
+
+        <div class="text-box">
+            <h2>Übersetzung ins Englische:</h2>
+            <p>{{ translated_text }}</p>
+        </div>
+
+        <a href="{{ url_for('upload_form') }}" class="back-link">&larr; Neues Bild hochladen</a>
     </div>
-
-    <section class="grid">
-      <!-- Original image -->
-      <div class="card">
-        <div class="labelRow">
-          <h2 style="margin:0;">Original Image</h2>
-          <span class="tag"><span class="dot"></span> source</span>
-        </div>
-
-        <div class="imageWrap">
-          <img src="{{ original_image }}" alt="Uploaded poem photo">
-        </div>
-        <p class="smallHint" style="margin:10px 0 0;">
-          Tip: If the text looks incomplete, try a brighter photo with the page filling the frame.
-        </p>
-      </div>
-
-      <!-- Detected text -->
-      <div class="card" id="detected">
-        <div class="labelRow">
-          <h2 style="margin:0;">Detected German Text</h2>
-          <div class="copyRow" style="margin:0;">
-            <button class="copyBtn" type="button" data-copy="extractedText">📋 Copy</button>
-          </div>
-        </div>
-        <div class="textBox" id="extractedText">{{ extracted_text }}</div>
-      </div>
-
-      <!-- Translation -->
-      <div class="card" id="translation" style="grid-column: 1 / -1;">
-        <div class="labelRow">
-          <h2 style="margin:0;">English Translation</h2>
-          <div class="copyRow" style="margin:0;">
-            <button class="copyBtn" type="button" data-copy="translatedText">📋 Copy</button>
-          </div>
-        </div>
-
-        <div class="textBox" id="translatedText">{{ translated_text }}</div>
-      </div>
-    </section>
-  </main>
-
-  <div class="toast" id="toast">Copied ✅</div>
-
-  <script>
-    // Copy buttons
-    const toast = document.getElementById('toast');
-
-    function showToast(msg){
-      toast.textContent = msg;
-      toast.classList.add('show');
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => toast.classList.remove('show'), 1100);
-    }
-
-    async function copyFrom(id){
-      const el = document.getElementById(id);
-      const text = (el && el.innerText) ? el.innerText : "";
-      if(!text.trim()){
-        showToast("Nothing to copy");
-        return;
-      }
-      try{
-        await navigator.clipboard.writeText(text);
-        showToast("Copied ✅");
-      }catch(_){
-        // fallback
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        try{ document.execCommand("copy"); showToast("Copied ✅"); }
-        catch(e){ showToast("Copy failed"); }
-        document.body.removeChild(ta);
-      }
-    }
-
-    document.querySelectorAll('[data-copy]').forEach(btn => {
-      btn.addEventListener('click', () => copyFrom(btn.getAttribute('data-copy')));
-    });
-
-    // Jump buttons
-    document.getElementById('scrollToTranslation').addEventListener('click', () => {
-      document.getElementById('translation').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-    document.getElementById('scrollToTop').addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  </script>
 </body>
 </html>

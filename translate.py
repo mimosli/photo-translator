@@ -1,49 +1,188 @@
 import os
+import re
 import deepl
 from dotenv import load_dotenv
 from glossary import apply_glossary
 
-# Lade Umgebungsdaten aus .env
 load_dotenv()
-DEEPL_KEY   = os.getenv("DEEPL_API_KEY")
-GLOSSARY_ID = os.getenv("DEEPL_GLOSSARY_ID")
+DEEPL_KEY    = os.getenv("DEEPL_API_KEY")
+GLOSSARY_ID  = os.getenv("DEEPL_GLOSSARY_ID")
 USE_GLOSSARY = bool(GLOSSARY_ID)
 
 
+# -----------------------------
+# OCR text cleanup helpers
+# -----------------------------
+
+_WEIRD_CHAR_MAP = {
+    "\u00ad": "",   # soft hyphen
+    "\ufb01": "fi", # ligatures
+    "\ufb02": "fl",
+    "“": '"', "”": '"',
+    "„": '"', "«": '"', "»": '"',
+    "’": "'", "‘": "'",
+    "—": "-", "–": "-",
+    "•": "-", "·": "-",
+    "…": "...",
+    "∕": "/",
+    "¦": "|",
+}
+
+
+def _normalize_chars(s: str) -> str:
+    for a, b in _WEIRD_CHAR_MAP.items():
+        s = s.replace(a, b)
+    return s
+
+
+def _fix_hyphenation(s: str) -> str:
+    """
+    Fix word breaks across line breaks:
+      'Wort-\\nbruch' -> 'Wortbruch'
+    Keep real dash lines intact by only removing hyphen right before a newline
+    when both sides look like letters.
+    """
+    # letters (incl. umlauts) on both sides
+    s = re.sub(r"([A-Za-zÄÖÜäöüß])-\n([A-Za-zÄÖÜäöüß])", r"\1\2", s)
+    return s
+
+
+def _remove_line_artifacts(s: str) -> str:
+    """
+    Remove common OCR junk while being conservative (poetry needs punctuation).
+    """
+    # Replace common "pipe" artifacts used as separators
+    s = s.replace("|", " ")
+
+    # Remove repeated underscores / long runs of punctuation
+    s = re.sub(r"[_]{3,}", " ", s)
+    s = re.sub(r"[=]{3,}", " ", s)
+
+    # Remove lonely single-character lines that are often noise
+    lines = s.splitlines()
+    cleaned = []
+    for ln in lines:
+        stripped = ln.strip()
+        if len(stripped) == 1 and stripped in {"-", "_", "—", "–", "."}:
+            continue
+        cleaned.append(ln)
+    return "\n".join(cleaned)
+
+
+def _normalize_whitespace_poetry(s: str) -> str:
+    """
+    Keep line breaks (important for poems), but normalize:
+    - trailing spaces
+    - excessive blank lines
+    - multiple spaces inside a line
+    """
+    s = s.replace("\r\n", "\n").replace("\r", "\n")
+
+    out_lines = []
+    blank_run = 0
+    for ln in s.split("\n"):
+        # collapse multiple spaces/tabs inside a line
+        ln2 = re.sub(r"[ \t]{2,}", " ", ln).rstrip()
+
+        if ln2.strip() == "":
+            blank_run += 1
+            # allow at most 1 consecutive blank line (stanza spacing)
+            if blank_run <= 1:
+                out_lines.append("")
+            continue
+
+        blank_run = 0
+        out_lines.append(ln2)
+
+    # Trim leading/trailing blank lines
+    while out_lines and out_lines[0] == "":
+        out_lines.pop(0)
+    while out_lines and out_lines[-1] == "":
+        out_lines.pop()
+
+    return "\n".join(out_lines)
+
+
+def cleanup_ocr_for_translation(text: str) -> str:
+    """
+    The main cleanup function:
+    1) normalize odd chars
+    2) fix hyphenation across line breaks
+    3) remove artifacts
+    4) normalize whitespace while keeping poem structure
+    """
+    if not text:
+        return ""
+
+    s = text
+    s = _normalize_chars(s)
+    s = _fix_hyphenation(s)
+    s = _remove_line_artifacts(s)
+    s = _normalize_whitespace_poetry(s)
+
+    # If OCR accidentally returns many empty lines, keep it sane:
+    # (already handled via blank_run, but this is a final guard)
+    s = re.sub(r"\n{3,}", "\n\n", s)
+    return s
+
+
+def ocr_quality_hint(text: str) -> str | None:
+    """
+    Optional: detect very noisy OCR and return a hint.
+    You can show this in UI or logs.
+    """
+    if not text or len(text.strip()) < 10:
+        return "OCR found very little text. Try brighter light and fill the frame with the poem."
+
+    cleaned = "".join(ch for ch in text if not ch.isspace())
+    if not cleaned:
+        return "OCR found no readable characters."
+
+    letters = sum(ch.isalpha() for ch in cleaned)
+    alpha_ratio = letters / max(1, len(cleaned))
+
+    # Heuristic: too many symbols -> likely garbage
+    if alpha_ratio < 0.45:
+        return "OCR quality seems low (many symbols). Try a sharper photo with less background."
+
+    return None
+
+
+# -----------------------------
+# DeepL translation
+# -----------------------------
+
 def translate_with_deepl(text: str) -> str:
     """
-    Übersetzt deutschen Text ins Englische (UK) via DeepL.
-    - Zuerst werden OCR-Fehler per apply_glossary korrigiert.
-    - Dann erfolgt der API-Aufruf, ggf. mit Glossary.
+    Translate German -> English (UK) via DeepL.
+    - Clean OCR text for translation
+    - Apply glossary (your OCR correction rules)
+    - Then translate (optionally with DeepL glossary)
     """
-    # 1) OCR-Ergebnis bereinigen
-    corrected = apply_glossary(text)
+    # 0) Cleanup for translation (preserve poetry structure)
+    cleaned = cleanup_ocr_for_translation(text)
 
-    # 2) Deepl-Client initialisieren
+    # Optional: if you want to surface a hint somewhere, you can log it:
+    # hint = ocr_quality_hint(cleaned)
+    # if hint: print("OCR hint:", hint)
+
+    # 1) OCR-error corrections
+    corrected = apply_glossary(cleaned)
+
+    # 2) DeepL client
     translator = deepl.Translator(DEEPL_KEY)
 
-    # 3) Parameter für Übersetzung
+    # 3) Translation params
     params = {
         "text": corrected,
         "source_lang": "DE",
-        "target_lang": "EN-GB"
+        "target_lang": "EN-GB",
+        # Optional: DeepL can respect formatting. Usually fine to omit.
+        # "preserve_formatting": True,
     }
     if USE_GLOSSARY:
         params["glossary"] = GLOSSARY_ID
 
-    # 4) API-Aufruf
+    # 4) API call
     result = translator.translate_text(**params)
     return result.text
-
-# Optional: GPT-basierte Übersetzung (wenn benötigt)
-# import openai
-# def translate_with_gpt(text: str) -> str:
-#     openai.api_key = os.getenv("OPENAI_API_KEY")
-#     response = openai.ChatCompletion.create(
-#         model="gpt-4",
-#         messages=[
-#             {"role": "system", "content": "You are a helpful translation assistant."},
-#             {"role": "user", "content": f"Übersetze ins Englische: {corrected}"}
-#         ]
-#     )
-#     return response.choices[0].message.content.strip()

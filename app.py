@@ -6,7 +6,7 @@ import time
 from uuid import uuid4
 
 from flask        import Flask, request, jsonify, render_template, url_for, Response, g
-from ocr          import extract_text
+from ocr import extract_text_best
 from translate    import translate_with_deepl   # or translate_with_gpt
 from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
 from geoip2.database import Reader as GeoIP2Reader
@@ -261,7 +261,7 @@ def translate_image():
         # 3) OCR
         german_text = ""
         try:
-            german_text = (extract_text(filepath) or "").strip()
+            german_text = (extract_text_best(filepath) or "").strip()
         except Exception as e:
             logging.exception("ocr_failed")
 

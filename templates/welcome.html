@@ -529,9 +529,9 @@
     // ---- Client config (defaults; server overrides below) ----
     const CONFIG = {
       MAX_BYTES: 3 * 1024 * 1024,
-      MAX_DIMENSION: 2200,
-      JPEG_QUALITY_START: 0.88,
-      JPEG_QUALITY_FLOOR: 0.6,
+      MAX_DIMENSION: 2600,
+      JPEG_QUALITY_START: 0.92,
+      JPEG_QUALITY_FLOOR: 0.78,
       API_CONFIG_URL: "{{ url_for('api_config') }}",
       UPLOAD_URL: "{{ url_for('api_upload') }}",           // expects field "file"
       TRANSLATE_URL: "{{ url_for('translate_image') }}",   // expects field "image"
