@@ -5,8 +5,10 @@ from dotenv import load_dotenv
 from glossary import apply_glossary
 
 load_dotenv()
-DEEPL_KEY    = os.getenv("DEEPL_API_KEY")
-GLOSSARY_ID  = os.getenv("DEEPL_GLOSSARY_ID")
+DEEPL_KEY = (os.getenv("DEEPL_API_KEY") or "").strip()
+if not DEEPL_KEY:
+    raise RuntimeError("DEEPL_API_KEY is missing")
+GLOSSARY_ID  = (os.getenv("DEEPL_GLOSSARY_ID") or "").strip()
 USE_GLOSSARY = bool(GLOSSARY_ID)
 
 
@@ -181,7 +183,7 @@ def translate_with_deepl(text: str) -> str:
         # "preserve_formatting": True,
     }
     if USE_GLOSSARY:
-        params["glossary"] = GLOSSARY_ID
+        params["glossary_id"] = GLOSSARY_ID
 
     # 4) API call
     result = translator.translate_text(**params)

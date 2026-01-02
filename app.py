@@ -266,10 +266,15 @@ def translate_image():
     if not f or f.filename == "":
         return "No selected file", 400
 
+    # ✅ define ip/country/ua BEFORE using them
+    ip = request.headers.get("X-Forwarded-For", "").split(",")[0].strip() or request.remote_addr or "0.0.0.0"
+    country = get_country_from_ip(ip)
+    ua = request.headers.get("User-Agent", "")
+
     # Save input file
     original_name = secure_filename(f.filename or "photo.jpg")
     base, _ = os.path.splitext(original_name)
-    filename = f"{base}_{int(time.time())}_{uuid4().hex[:6]}.jpg"  # force jpg
+    filename = f"{base}_{int(time.time())}_{uuid4().hex[:6]}.jpg"
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 
     try:
