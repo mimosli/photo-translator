@@ -1,17 +1,23 @@
 import os
 import re
 import deepl
+import inspect
 from dotenv import load_dotenv
 from glossary import apply_glossary
-import inspect
+from langdetect import detect, DetectorFactory
+
+DetectorFactory.seed = 0  # make results deterministic
 
 load_dotenv()
 DEEPL_KEY = (os.getenv("DEEPL_API_KEY") or "").strip()
 if not DEEPL_KEY:
     raise RuntimeError("DEEPL_API_KEY is missing")
+
+GLOSSARY_DE_EN = (os.getenv("DEEPL_GLOSSARY_ID_DE_EN") or "").strip()
+GLOSSARY_FR_EN = (os.getenv("DEEPL_GLOSSARY_ID_FR_EN") or "").strip()
+
 GLOSSARY_ID  = (os.getenv("DEEPL_GLOSSARY_ID") or "").strip()
 USE_GLOSSARY = bool(GLOSSARY_ID)
-
 
 # -----------------------------
 # OCR text cleanup helpers
@@ -31,6 +37,28 @@ _WEIRD_CHAR_MAP = {
     "¦": "|",
 }
 
+
+def detect_source_lang(text: str) -> str | None:
+    """
+    Returns DeepL-style language codes: 'DE' or 'FR', or None if uncertain.
+    """
+    try:
+        lang = detect(text)
+    except Exception:
+        return None
+
+    if lang == "de":
+        return "DE"
+    if lang == "fr":
+        return "FR"
+    return None
+
+def get_glossary_id_for_pair(src: str, tgt: str) -> str | None:
+    if src == "DE" and tgt == "EN":
+        return GLOSSARY_DE_EN or None
+    if src == "FR" and tgt == "EN":
+        return GLOSSARY_FR_EN or None
+    return None
 
 def _normalize_chars(s: str) -> str:
     for a, b in _WEIRD_CHAR_MAP.items():
@@ -155,32 +183,33 @@ def ocr_quality_hint(text: str) -> str | None:
 # DeepL translation
 # -----------------------------
 
-def translate_with_deepl(text: str) -> str:
-    """
-    Translate German -> English (UK) via DeepL.
-    - Clean OCR text for translation
-    - Apply glossary (your OCR correction rules)
-    - Then translate (optionally with DeepL glossary)
-    """
+def translate_to_english(text: str) -> tuple[str, str | None]:
     cleaned = cleanup_ocr_for_translation(text)
     corrected = apply_glossary(cleaned)
 
+    source_lang = detect_source_lang(corrected)  # 'DE', 'FR', or None
     translator = deepl.Translator(DEEPL_KEY)
 
-    # Base params (no DeepL glossary by default)
     params = {
         "text": corrected,
-        "source_lang": "DE",
         "target_lang": "EN-GB",
-        # "preserve_formatting": True,
     }
+    if source_lang:
+        params["source_lang"] = source_lang
 
-    # Only add DeepL glossary if configured AND supported by your deepl package
-    if USE_GLOSSARY:
+    # Apply DeepL glossary only if:
+    # - we detected a supported language
+    # - we have the right glossary for that pair
+    if source_lang and USE_GLOSSARY:
         sig = inspect.signature(translator.translate_text)
         if "glossary" in sig.parameters:
-            params["glossary"] = GLOSSARY_ID
-        # else: silently ignore DeepL glossary, keep apply_glossary() corrections
+            glossary_id = get_glossary_id_for_pair(source_lang, "EN")  # you implement this
+            if glossary_id:
+                params["glossary"] = glossary_id
 
     result = translator.translate_text(**params)
-    return result.text
+    translated = result.text
+
+    # If you omitted source_lang, DeepL may still tell you what it detected:
+    detected = getattr(result, "detected_source_lang", None)
+    return translated, (source_lang or detected)

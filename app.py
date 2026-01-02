@@ -14,7 +14,7 @@ import psycopg
 from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
 
 from ocr import extract_text_best
-from translate import translate_with_deepl
+from translate import translate_to_english
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -69,6 +69,14 @@ def get_country_from_ip(ip: str) -> str:
         return "ZZ"
 
 
+def get_client_ip() -> str:
+    # Respect reverse proxy header if present
+    xff = request.headers.get("X-Forwarded-For", "")
+    if xff:
+        return xff.split(",")[0].strip() or "0.0.0.0"
+    return request.remote_addr or "0.0.0.0"
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Prometheus metrics
 # ──────────────────────────────────────────────────────────────────────────────
@@ -111,9 +119,8 @@ def after_request(response):
         if request.endpoint == "api_upload":
             UPLOAD_COUNTER.inc()
 
-        # Track uploads by country for both endpoints
         if request.endpoint in {"translate_image", "api_upload"}:
-            ip = request.remote_addr or "0.0.0.0"
+            ip = get_client_ip()
             country = get_country_from_ip(ip)
             COUNTRY_GAUGE.labels(country=country).inc()
     except Exception as e:
@@ -122,7 +129,15 @@ def after_request(response):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# DB helpers (best-effort)
+# Errors
+# ──────────────────────────────────────────────────────────────────────────────
+@app.errorhandler(RequestEntityTooLarge)
+def too_large(_e):
+    return jsonify({"error": "File too large", "max": MAX_BYTES}), 413
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# DB helper (best-effort)
 # ──────────────────────────────────────────────────────────────────────────────
 def db_insert_upload(filename: str, client_ip: str, user_agent: str, country: str) -> None:
     """
@@ -144,6 +159,25 @@ def db_insert_upload(filename: str, client_ip: str, user_agent: str, country: st
                 )
     except Exception as e:
         log.warning(f"upload_db_insert_failed: {e}")
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Image helpers
+# ──────────────────────────────────────────────────────────────────────────────
+def _compress_to_jpeg_under_limit(img: Image.Image, max_bytes: int) -> bytes:
+    """
+    Compresses PIL image to JPEG under max_bytes by reducing quality.
+    """
+    quality = 88
+    buf = BytesIO()
+    img.save(buf, format="JPEG", quality=quality, optimize=True)
+    while buf.tell() > max_bytes and quality > 70:
+        quality -= 5
+        buf.seek(0)
+        buf.truncate(0)
+        img.save(buf, format="JPEG", quality=quality, optimize=True)
+    return buf.getvalue()
+
 
 def _save_normalized_image(file_storage, out_path: str) -> int:
     """
@@ -171,40 +205,21 @@ def _save_normalized_image(file_storage, out_path: str) -> int:
 
     return len(jpeg_bytes)
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Errors
-# ──────────────────────────────────────────────────────────────────────────────
-@app.errorhandler(RequestEntityTooLarge)
-def too_large(_e):
-    return jsonify({"error": "File too large", "max": MAX_BYTES}), 413
-
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Routes
 # ──────────────────────────────────────────────────────────────────────────────
-@app.route("/")
+@app.get("/")
 def upload_form():
-    return render_template("welcome.html")
+    host = request.host.split(":")[0]
+    if host in ("leilafrey.com", "www.leilafrey.com"):
+        return render_template("welcome.html")
+    return render_template("upload.html")
 
 
 @app.route("/api/config", methods=["GET"])
 def api_config():
     return jsonify({"maxBytes": MAX_BYTES, "maxDimension": MAX_DIMENSION}), 200
-
-
-def _compress_to_jpeg_under_limit(img: Image.Image, max_bytes: int) -> bytes:
-    """
-    Compresses PIL image to JPEG under max_bytes by reducing quality.
-    """
-    quality = 88
-    buf = BytesIO()
-    img.save(buf, format="JPEG", quality=quality, optimize=True)
-    while buf.tell() > max_bytes and quality > 70:
-        quality -= 5
-        buf.seek(0)
-        buf.truncate(0)
-        img.save(buf, format="JPEG", quality=quality, optimize=True)
-    return buf.getvalue()
 
 
 @app.route("/api/upload", methods=["POST"])
@@ -245,13 +260,11 @@ def api_upload():
 
     url = url_for("static", filename=f"uploads/{safe_name}", _external=False)
 
-    ip = request.remote_addr or "0.0.0.0"
+    ip = get_client_ip()
     country = get_country_from_ip(ip)
     ua = request.headers.get("User-Agent", "")
 
     log.info(f'upload_store: filename="{safe_name}" bytes={len(jpeg_bytes)} ip={ip} country={country}')
-
-    # DB best-effort
     db_insert_upload(filename=safe_name, client_ip=ip, user_agent=ua, country=country)
 
     return jsonify({"ok": True, "url": url, "bytes": len(jpeg_bytes)}), 200
@@ -266,8 +279,7 @@ def translate_image():
     if not f or f.filename == "":
         return "No selected file", 400
 
-    # ✅ define ip/country/ua BEFORE using them
-    ip = request.headers.get("X-Forwarded-For", "").split(",")[0].strip() or request.remote_addr or "0.0.0.0"
+    ip = get_client_ip()
     country = get_country_from_ip(ip)
     ua = request.headers.get("User-Agent", "")
 
@@ -283,11 +295,11 @@ def translate_image():
         return str(e), 400
 
     # OCR
-    german_text = ""
+    extracted_text = ""
     ocr_error = None
     try:
-        german_text = (extract_text_best(filepath) or "").strip()
-        if not german_text:
+        extracted_text = (extract_text_best(filepath) or "").strip()
+        if not extracted_text:
             ocr_error = "No readable text detected. Try brighter light, less tilt, and fill the frame with the page."
     except Exception as e:
         log.exception("ocr_failed")
@@ -295,29 +307,25 @@ def translate_image():
 
     # Translation
     translated_text = ""
+    detected_lang = None
     translation_error = None
     try:
-        if german_text:
-            translated_text = (translate_with_deepl(german_text) or "").strip()
+        if extracted_text:
+            translated_text, detected_lang = translate_to_english(extracted_text)
+            translated_text = (translated_text or "").strip()
     except Exception as e:
         log.exception("translation_failed")
         translation_error = str(e)[:200]
 
-    ip = request.headers.get("X-Forwarded-For", "").split(",")[0].strip() or request.remote_addr or "0.0.0.0"
-    country = get_country_from_ip(ip)
-    ua = request.headers.get("User-Agent", "")
-
-    # Metadata log + DB best-effort
     log.info(
-        f"upload_metadata: {{'client_ip': '{ip}', 'filename': '{filename}', 'user_agent': '{ua}', 'country': '{country}'}}"
+        f"upload_metadata: {{'client_ip': '{ip}', 'filename': '{filename}', 'user_agent': '{ua}', 'country': '{country}', 'detected_lang': '{detected_lang}'}}"
     )
     db_insert_upload(filename=filename, client_ip=ip, user_agent=ua, country=country)
 
-    # Render result
     return render_template(
         "result.html",
-        original_image = f"uploads/{filename}",
-        extracted_text=german_text,
+        original_image=url_for("static", filename=f"uploads/{filename}"),
+        extracted_text=extracted_text,
         translated_text=translated_text,
         ocr_error=ocr_error,
         translation_error=translation_error,

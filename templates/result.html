@@ -1,121 +1,322 @@
-<!DOCTYPE html>
-<html lang="de">
+<!doctype html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Übersetzungsergebnis</title>
-  <style>
-    :root {
-      --bg: #ffffff;
-      --panel: #f7f7f7;
-      --text: #111;
-      --muted: #666;
-      --border: #e5e5e5;
-      --link: #1a73e8;
-      --danger: #b00020;
-      --radius: 10px;
-    }
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 24px;
-    }
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    h1 { margin: 0 0 16px; }
-    .muted { color: var(--muted); }
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Translation Result</title>
 
-    .card {
-      background: var(--panel);
+  <style>
+    :root{
+      /* Match welcome.html palette */
+      --bg: #06130f;
+      --panel: #0b1f18;
+      --panel-2:#0e2a20;
+      --text: #ffffff;
+      --muted:#c7d3cf;
+      --border: rgba(255,255,255,.10);
+
+      --pink:#ff4fb8;
+      --red:#ff3b3b;
+      --gold:#f7c948;
+
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --radius: 18px;
+
+      --focus: 0 0 0 3px rgba(247,201,72,.25);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+
+    body{
+      margin:0;
+      background:
+        radial-gradient(900px 500px at 20% 10%, rgba(255,79,184,.18), transparent 55%),
+        radial-gradient(900px 500px at 85% 20%, rgba(247,201,72,.16), transparent 55%),
+        radial-gradient(900px 500px at 45% 95%, rgba(255,59,59,.12), transparent 55%),
+        linear-gradient(180deg, #04110d, var(--bg));
+      color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    .container{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: clamp(16px, 4vw, 34px);
+      padding-bottom: 34px;
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
       border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(14px, 3vw, 18px);
+      backdrop-filter: blur(8px);
+    }
+
+    .topbar{
+      display:flex;
+      justify-content: space-between;
+      align-items:flex-start;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    h1{
+      margin:0;
+      font-size: clamp(22px, 4.5vw, 34px);
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .subhead{
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+      max-width: 70ch;
+    }
+
+    .badge-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+      margin-top: 2px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(11,31,24,.65);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .badge .dot{
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--gold);
+      box-shadow: 0 0 0 3px rgba(247,201,72,.18);
+    }
+
+    .panel{
+      border: 1px solid rgba(255,255,255,.10);
       border-radius: var(--radius);
       padding: 16px;
-      margin: 16px 0;
+      background: rgba(11,31,24,.55);
     }
 
-    .image-wrap img {
+    .panel-head{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .panel h2{
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -0.01em;
+    }
+
+    .helper{
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    /* Desktop: OCR left, translation right */
+    @media (min-width: 920px){
+      .grid{
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+      }
+    }
+
+    .image-wrap{
+      margin-top: 14px;
+    }
+
+    .image{
       width: 100%;
       height: auto;
-      display: block;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: #fff;
+      display:block;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.25);
     }
 
-    .label {
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    pre {
-      margin: 0;
-      padding: 12px;
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+    pre{
+      margin:0;
+      padding: 14px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.25);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.55;
       white-space: pre-wrap;
       word-break: break-word;
-      font-size: 15px;
-      line-height: 1.4;
+      overflow-wrap: anywhere;
+      min-height: 240px;
     }
 
-    .error {
-      color: var(--danger);
-      font-weight: 600;
-      margin: 8px 0 0;
+    .alert{
+      margin: 0 0 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,59,59,.35);
+      background: rgba(255,59,59,.12);
+      color: #ffd1d1;
+      font-weight: 650;
+      font-size: 13px;
+      line-height: 1.35;
     }
 
-    .actions {
-      margin-top: 18px;
+    button, a.btn{
+      appearance:none;
+      border:0;
+      cursor:pointer;
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-weight: 800;
+      letter-spacing: .01em;
+      transition: transform .08s ease, opacity .12s ease, filter .12s ease;
+      outline: none;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap: 8px;
+      user-select:none;
     }
-    a.back-link {
-      text-decoration: none;
-      color: var(--link);
-      font-weight: 600;
+    button:focus, a.btn:focus{ box-shadow: var(--focus); }
+    button:hover, a.btn:hover{ transform: translateY(-1px); }
+    button:active, a.btn:active{ transform: translateY(0px); }
+
+    .btn-primary{
+      background: linear-gradient(180deg, var(--pink), #ff77cb);
+      color: #1b0613;
     }
-    a.back-link:hover { text-decoration: underline; }
+    .btn-secondary{
+      background: linear-gradient(180deg, var(--gold), #ffd97a);
+      color: #1a1200;
+    }
+    .btn-ghost{
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.16);
+      color: var(--text);
+    }
+
+    .footer{
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .copy-status{
+      color: var(--muted);
+      font-size: 13px;
+      min-height: 18px;
+    }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <h1>Übersetzungsergebnis</h1>
-    <p class="muted">OCR + Übersetzung aus deinem hochgeladenen Bild.</p>
+  <main class="container">
+    <section class="card">
+      <div class="topbar">
+        <div>
+          <h1>Translation Result</h1>
+          <p class="subhead">OCR + English translation from your uploaded image.</p>
+        </div>
 
-    <div class="card image-wrap">
-      <div class="label">Originalbild</div>
+        <div class="badge-row">
+          {% if detected_lang %}
+            <span class="badge"><span class="dot"></span> Detected: {{ detected_lang }}</span>
+          {% else %}
+            <span class="badge"><span class="dot"></span> English output</span>
+          {% endif %}
+          <span class="badge">📚 poem mode</span>
+          <span class="badge">🔒 secure</span>
+        </div>
+      </div>
+     
+      <div class="grid" aria-label="Text results">
+        <!-- OCR: left -->
+        <section class="panel" aria-label="Recognized text">
+          <div class="panel-head">
+            <h2>Recognized text</h2>
+            <button class="btn btn-ghost" type="button" onclick="copyFrom('recognized')">Copy</button>
+          </div>
 
-      <!-- IMPORTANT: original_image is already a URL like /static/uploads/xxx.jpg -->
-      <img src="{{ original_image }}" alt="Hochgeladenes Bild">
-    </div>
+          {% if ocr_error %}
+            <div class="alert">OCR note: {{ ocr_error }}</div>
+          {% endif %}
 
-    <div class="card">
-      <div class="label">Erkannter deutscher Text</div>
+          <pre id="recognized">{{ extracted_text }}</pre>
+        </section>
 
-      {% if ocr_error %}
-        <p class="error">OCR Hinweis: {{ ocr_error }}</p>
-      {% endif %}
+        <!-- Translation: right -->
+        <section class="panel" aria-label="English translation">
+          <div class="panel-head">
+            <h2>English translation</h2>
+            <button class="btn btn-ghost" type="button" onclick="copyFrom('translated')">Copy</button>
+          </div>
 
-      <pre>{{ extracted_text }}</pre>
-    </div>
+          {% if translation_error %}
+            <div class="alert">Translation error: {{ translation_error }}</div>
+          {% endif %}
 
-    <div class="card">
-      <div class="label">Übersetzung ins Englische</div>
+          <pre id="translated">{{ translated_text }}</pre>
+        </section>
+      </div>
 
-      {% if translation_error %}
-        <p class="error">Übersetzung Hinweis: {{ translation_error }}</p>
-      {% endif %}
+      <div class="footer">
+        <div class="copy-status" id="copyStatus" aria-live="polite"></div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="btn btn-secondary" href="{{ url_for('upload_form') }}">Upload new image</a>
+          <a class="btn btn-primary" href="{{ url_for('upload_form') }}">Translate another ✨</a>
+        </div>
+      </div>
+    </section>
+  </main>
 
-      <pre>{{ translated_text }}</pre>
-    </div>
-
-    <div class="actions">
-      <a href="{{ url_for('upload_form') }}" class="back-link">&larr; Neues Bild hochladen</a>
-    </div>
-  </div>
+  <script>
+    async function copyFrom(id){
+      const el = document.getElementById(id);
+      const status = document.getElementById("copyStatus");
+      const text = el ? el.innerText : "";
+      try{
+        await navigator.clipboard.writeText(text);
+        status.textContent = "Copied to clipboard.";
+        setTimeout(() => status.textContent = "", 1700);
+      }catch(e){
+        status.textContent = "Copy failed. Select the text and copy manually.";
+        setTimeout(() => status.textContent = "", 2600);
+      }
+    }
+  </script>
 </body>
 </html>

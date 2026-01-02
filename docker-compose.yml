@@ -1,60 +1,160 @@
-#version: "3.8"
+#version: "3.9"
+
+name: buchapp
 
 services:
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      web:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+     
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./static:/static:ro
+      - ./:/var/www/leilafrey:ro
+      - ./infra/certbot/www:/var/www/certbot:ro
+      - ./infra/certbot/conf:/etc/letsencrypt:ro
+      # TLS (later):
+      # - ./infra/letsencrypt:/etc/letsencrypt:ro
+      # - ./infra/certbot/www:/var/www/certbot:ro
+    restart: unless-stopped
+    networks:
+      - appnet
+
   web:
     build:
       context: .
-      args:
-        MAXMIND_LICENSE_KEY: ${MAXMIND_LICENSE_KEY}
-    image: photo-translator:latest
+      dockerfile: Dockerfile
     env_file:
-      - .env                      # your existing secrets (DEEPL_API_KEY, etc.)
+      - ./.env
     environment:
-      # Runtime-tunable limits (no rebuild needed)
-      MAX_BYTES: "3145728"        # 3 * 1024 * 1024  (3 MB)
-      MAX_DIMENSION: "2200"       # max width/height in pixels
-      # Point the app to Postgres inside the compose network
-      DATABASE_URL: "postgresql://photo:secretpassword@db:5432/photodb"
-      # Where the app saves files (matches your Flask UPLOAD_FOLDER)
-      UPLOAD_DIR: "/app/static/uploads"
+      # helpful defaults; override in .env
+      FLASK_ENV: "production"
+      PORT: "8000"
+      # Example for psycopg3:
+      # DATABASE_URL: "postgresql://photo:${POSTGRES_PASSWORD}@db:5432/photo"
+    command: ["gunicorn", "-w", "2", "-k", "gthread", "--threads", "4", "--timeout", "120", "-b", "0.0.0.0:8000", "app:app"]
     volumes:
-      # Persist uploaded files on the host
-      - ./templates:/app/templates
       - ./static:/app/static
-      - ./static/uploads:/app/static/uploads
-      
-    ports:
-      - "5001:5001"
-    restart: always
+      # If you have GeoIP DB on host:
+      # - ./infra/geoip/GeoLite2-Country.mmdb:/app/GeoLite2-Country.mmdb:ro
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      # redis:
+      #   condition: service_healthy
     healthcheck:
-      # NOTE: Make sure your image has curl. If not, add it in the Dockerfile or switch to wget. We do not install curl within the image.
-      test: ["CMD", "curl", "-fsS", "http://localhost:5001/healthz"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/healthz || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - appnet
 
   db:
-    image: postgres:15
-    restart: always
+    image: postgres:16-alpine
+    env_file:
+      - ./.env
     environment:
-      POSTGRES_DB: photodb
-      POSTGRES_USER: photo
-      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: "${POSTGRES_DB:-photo}"
+      POSTGRES_USER: "${POSTGRES_USER:-photo}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    networks:
+      - appnet
+
+  # --- Optional: background queue (LATER-ready) ---
+  # redis:
+  #   image: redis:7-alpine
+  #   command: ["redis-server", "--appendonly", "yes"]
+  #   volumes:
+  #     - redisdata:/data
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 20
+  #   restart: unless-stopped
+  #   networks:
+  #     - appnet
+
+  # worker:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   env_file:
+  #     - ./.env
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   command: >
+  #     sh -lc "
+  #       python worker.py
+  #     "
+  #   volumes:
+  #     - ./static:/app/static
+  #   restart: unless-stopped
+  #   networks:
+  #     - appnet
+
+  # --- Optional: monitoring ---
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - promdata:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - appnet
 
   grafana:
-    image: grafana/grafana:9.4.7
-    restart: always
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=secret
-      - GF_SECURITY_ALLOW_EMBEDDING=true
+    image: grafana/grafana:11.1.4
     depends_on:
-      - db
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: "${GRAFANA_USER:-admin}"
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_PASSWORD:-admin}"
+    volumes:
+      - grafanadata:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    restart: unless-stopped
+    networks:
+      - appnet
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./infra/certbot/www:/var/www/certbot
+      - ./infra/certbot/conf:/etc/letsencrypt
+
+networks:
+  appnet:
 
 volumes:
   pgdata:
+  promdata:
+  grafanadata:
+  # redisdata:
