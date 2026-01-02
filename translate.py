@@ -3,6 +3,7 @@ import re
 import deepl
 from dotenv import load_dotenv
 from glossary import apply_glossary
+import inspect
 
 load_dotenv()
 DEEPL_KEY = (os.getenv("DEEPL_API_KEY") or "").strip()
@@ -161,33 +162,25 @@ def translate_with_deepl(text: str) -> str:
     - Apply glossary (your OCR correction rules)
     - Then translate (optionally with DeepL glossary)
     """
-    # 0) Cleanup for translation (preserve poetry structure)
     cleaned = cleanup_ocr_for_translation(text)
-
-    # Optional: if you want to surface a hint somewhere, you can log it:
-    # hint = ocr_quality_hint(cleaned)
-    # if hint: print("OCR hint:", hint)
-
-    # 1) OCR-error corrections
     corrected = apply_glossary(cleaned)
 
-    # 2) DeepL client
     translator = deepl.Translator(DEEPL_KEY)
 
-    # 3) Translation params
+    # Base params (no DeepL glossary by default)
     params = {
         "text": corrected,
         "source_lang": "DE",
         "target_lang": "EN-GB",
-        # Optional: DeepL can respect formatting. Usually fine to omit.
         # "preserve_formatting": True,
     }
-    sig = inspect.signature(translator.translate_text)
-    if USE_GLOSSARY:
-        params["glossary"] = GLOSSARY_ID
-    else:
-        pass
 
-    # 4) API call
+    # Only add DeepL glossary if configured AND supported by your deepl package
+    if USE_GLOSSARY:
+        sig = inspect.signature(translator.translate_text)
+        if "glossary" in sig.parameters:
+            params["glossary"] = GLOSSARY_ID
+        # else: silently ignore DeepL glossary, keep apply_glossary() corrections
+
     result = translator.translate_text(**params)
     return result.text
