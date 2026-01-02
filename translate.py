@@ -182,8 +182,11 @@ def translate_with_deepl(text: str) -> str:
         # Optional: DeepL can respect formatting. Usually fine to omit.
         # "preserve_formatting": True,
     }
+    sig = inspect.signature(translator.translate_text)
     if USE_GLOSSARY:
-        params["glossary_id"] = GLOSSARY_ID
+        params["glossary"] = GLOSSARY_ID
+    else:
+        pass
 
     # 4) API call
     result = translator.translate_text(**params)
