@@ -16,7 +16,6 @@ services:
       - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./infra/nginx/conf.d:/etc/nginx/conf.d:ro
       - ./static:/static:ro
-      - ./:/var/www/leilafrey:ro
       - ./infra/certbot/www:/var/www/certbot:ro
       - ./infra/certbot/conf:/etc/letsencrypt:ro
       # TLS (later):

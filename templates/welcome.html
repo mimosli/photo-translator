@@ -5,53 +5,208 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Photo Translator</title>
 
-  <!-- (STYLE SECTION UNCHANGED EXCEPT ADDITION BELOW) -->
   <style>
-    /* … YOUR EXISTING CSS … */
+    :root{
+      --bg:#06130f;
+      --panel:#0b1f18;
+      --panel-2:#0e2a20;
+      --text:#ffffff;
+      --muted:#c7d3cf;
+      --gold:#f7c948;
+      --pink:#ff4fb8;
+      --border:rgba(255,255,255,.12);
+      --radius:18px;
+    }
 
-    /* --- Processing indicator (NEW) --- */
-    .processing {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--muted);
-      margin-top: 6px;
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      background:
+        radial-gradient(900px 500px at 20% 10%, rgba(255,79,184,.18), transparent 55%),
+        radial-gradient(900px 500px at 85% 20%, rgba(247,201,72,.16), transparent 55%),
+        linear-gradient(180deg,#04110d,var(--bg));
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
     }
-    .spinner {
-      width: 16px;
-      height: 16px;
-      border: 3px solid rgba(255,255,255,.2);
-      border-top-color: var(--gold);
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
+
+    .container{
+      max-width:900px;
+      margin:0 auto;
+      padding:24px;
+      padding-bottom:120px;
     }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+
+    .card{
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:28px;
+      margin-bottom:16px;
     }
-    .hidden { display: none; }
+
+    h1{
+      margin:0 0 10px;
+      font-size:32px;
+      letter-spacing:-.02em;
+    }
+
+    p{
+      margin:0 0 16px;
+      color:var(--muted);
+      line-height:1.5;
+    }
+
+    /* upload */
+    .picker{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:14px 18px;
+      border-radius:14px;
+      background:linear-gradient(180deg,var(--pink),#ff77cb);
+      color:#1b0613;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    input[type="file"]{ display:none; }
+
+    #preview img{
+      margin-top:14px;
+      max-width:100%;
+      border-radius:14px;
+      border:1px solid var(--border);
+    }
+
+    #status{
+      margin-top:12px;
+      font-size:14px;
+      min-height:20px;
+    }
+    .ok{ color:#68ffbe; }
+    .err{ color:#ff8a8a; }
+
+    /* actions */
+    .actions{
+      position:fixed;
+      left:0; right:0; bottom:0;
+      padding:14px;
+      background:linear-gradient(180deg,rgba(6,19,15,0),rgba(6,19,15,.95));
+      border-top:1px solid var(--border);
+    }
+    .actions-inner{
+      max-width:900px;
+      margin:0 auto;
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+    }
+
+    button{
+      border:0;
+      border-radius:14px;
+      padding:12px 16px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    button[disabled]{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+
+    .btn-primary{
+      background:linear-gradient(180deg,var(--gold),#ffd97a);
+      color:#1a1200;
+    }
+    .btn-ghost{
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      color:var(--text);
+    }
+
+    /* --- Processing indicator --- */
+    .processing{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size:13px;
+      color:var(--muted);
+      margin-top:8px;
+    }
+    .spinner{
+      width:16px;
+      height:16px;
+      border:3px solid rgba(255,255,255,.2);
+      border-top-color:var(--gold);
+      border-radius:50%;
+      animation:spin .8s linear infinite;
+    }
+    @keyframes spin{ to{ transform:rotate(360deg); } }
+    .hidden{ display:none; }
   </style>
 </head>
 
 <body>
-  <!-- (BODY CONTENT UNCHANGED UNTIL STATUS AREA) -->
+  <main class="container">
+    <section class="card">
+      <h1>Translate your poem</h1>
+      <p>
+        Upload a photo of your poem and get a clean English translation.
+      </p>
 
-  <!-- STATUS -->
-  <div id="status" role="status" aria-live="polite"></div>
+      <label class="picker">
+        📷 Choose image
+        <input id="fileInput" type="file" accept="image/*">
+      </label>
 
-  <!-- PROCESSING INDICATOR (NEW) -->
-  <div id="processing" class="processing hidden">
-    <div class="spinner"></div>
-    <span id="processingText">Processing…</span>
-  </div>
+      <div id="preview"></div>
 
-  <!-- (REST OF HTML UNCHANGED) -->
+      <div id="status" role="status" aria-live="polite"></div>
+
+      <div id="processing" class="processing hidden">
+        <div class="spinner"></div>
+        <span id="processingText">Processing…</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="actions">
+    <div class="actions-inner">
+      <button id="translateBtn" class="btn-primary" disabled>
+        Translate ✨
+      </button>
+      <button id="clearBtn" class="btn-ghost" disabled>
+        Remove
+      </button>
+    </div>
+  </footer>
 
   <script>
-    /* --- EXISTING SCRIPT ABOVE UNCHANGED --- */
+    const fileInput  = document.getElementById("fileInput");
+    const preview    = document.getElementById("preview");
+    const statusEl   = document.getElementById("status");
+    const translateBtn = document.getElementById("translateBtn");
+    const clearBtn     = document.getElementById("clearBtn");
 
     const processingEl   = document.getElementById("processing");
     const processingText = document.getElementById("processingText");
+
+    let selectedFile = null;
+
+    function statusOk(msg){
+      statusEl.className = "ok";
+      statusEl.textContent = msg;
+    }
+    function statusErr(msg){
+      statusEl.className = "err";
+      statusEl.textContent = msg;
+    }
+    function statusNeutral(msg){
+      statusEl.className = "";
+      statusEl.textContent = msg || "";
+    }
 
     function showProcessing(text){
       processingText.textContent = text || "Processing…";
@@ -61,56 +216,59 @@
       processingEl.classList.add("hidden");
     }
 
-    // ---- MODIFY EXISTING HANDLERS ONLY ----
+    fileInput.addEventListener("change", () => {
+      preview.innerHTML = "";
+      statusNeutral("");
+      selectedFile = null;
 
-    uploadBtn.addEventListener("click", async () => {
-      if(!processedBlob) return;
-      uploadBtn.disabled = true;
+      const file = fileInput.files[0];
+      if(!file || !file.type.startsWith("image/")) return;
+
+      selectedFile = file;
+
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      preview.appendChild(img);
+
+      translateBtn.disabled = false;
+      clearBtn.disabled = false;
+    });
+
+    clearBtn.addEventListener("click", () => {
+      fileInput.value = "";
+      preview.innerHTML = "";
+      selectedFile = null;
       translateBtn.disabled = true;
       clearBtn.disabled = true;
-
-      showProcessing("Uploading image…");
-      statusNeutral("Saving image…");
-
-      try{
-        const form = new FormData();
-        form.append(CONFIG.FIELD_NAME, processedBlob, processedName || "upload.jpg");
-        const res  = await fetch(CONFIG.UPLOAD_URL, { method:"POST", body: form });
-        if(!res.ok) throw new Error("Upload failed.");
-        statusOk("Saved ✅");
-      }catch(err){
-        statusErr(err.message);
-      }finally{
-        hideProcessing();
-        uploadBtn.disabled = false;
-        translateBtn.disabled = false;
-        clearBtn.disabled = false;
-      }
+      statusNeutral("");
+      hideProcessing();
     });
 
     translateBtn.addEventListener("click", async () => {
-      if(!processedBlob) return;
+      if(!selectedFile) return;
 
-      uploadBtn.disabled = true;
       translateBtn.disabled = true;
       clearBtn.disabled = true;
-
-      translateBtn.textContent = "Processing…";
       showProcessing("Running OCR & translation…");
-      setProgress(3);
 
       try{
         const form = new FormData();
-        form.append("image", processedBlob, processedName || "photo.jpg");
-        const res  = await fetch(CONFIG.TRANSLATE_URL, { method:"POST", body: form });
+        form.append("image", selectedFile);
+
+        const res = await fetch("/translate", {
+          method:"POST",
+          body: form
+        });
+
         const body = await res.text();
         if(!res.ok) throw new Error("Translation failed.");
-        document.open(); document.write(body); document.close();
+
+        document.open();
+        document.write(body);
+        document.close();
       }catch(err){
-        statusErr(err.message);
+        statusErr(err.message || "Something went wrong.");
         hideProcessing();
-        translateBtn.textContent = "Translate ✨";
-        uploadBtn.disabled = false;
         translateBtn.disabled = false;
         clearBtn.disabled = false;
       }
