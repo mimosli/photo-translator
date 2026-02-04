@@ -213,4 +213,4 @@ def translate_to_english(text: str) -> tuple[str, str | None]:
 
     # If you omitted source_lang, DeepL may still tell you what it detected:
     detected = getattr(result, "detected_source_lang", None)
-    return translated, (source_lang or detected)
+    return translated.lower(), (source_lang or detected)
