@@ -6,130 +6,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
   <style>
-    :root{
-      --bg:#06130f;
-      --panel:#0b1f18;
-      --text:#ffffff;
-      --muted:#c7d3cf;
-      --pink:#ff4fb8;
-      --gold:#f7c948;
-      --border:rgba(255,255,255,.12);
-      --radius:18px;
-    }
+    /* … YOUR EXISTING CSS … */
 
-    *{ box-sizing:border-box; }
-
-    body{
-      margin:0;
-      min-height:100vh;
-      background:
-        radial-gradient(800px 400px at 20% 10%, rgba(255,79,184,.18), transparent 55%),
-        radial-gradient(800px 400px at 80% 90%, rgba(247,201,72,.14), transparent 55%),
-        linear-gradient(180deg,#04110d,var(--bg));
-      color:var(--text);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+    /* --- Processing indicator (NEW) --- */
+    .processing{
       display:flex;
-      align-items:center;
       justify-content:center;
-      padding:24px;
-    }
-
-    .card{
-      max-width:420px;
-      width:100%;
-      background:rgba(11,31,24,.7);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      padding:28px;
-      box-shadow:0 20px 60px rgba(0,0,0,.45);
-      text-align:center;
-    }
-
-    h1{
-      margin:0 0 10px;
-      font-size:26px;
-      letter-spacing:-.02em;
-    }
-
-    p{
-      margin:0 0 18px;
-      color:var(--muted);
-      line-height:1.5;
-      font-size:15px;
-    }
-
-    input[type="file"]{ display:none; }
-
-    .pick{
-      display:inline-flex;
       align-items:center;
-      gap:10px;
-      padding:14px 18px;
-      border-radius:16px;
-      background:linear-gradient(180deg,var(--pink),#ff77cb);
-      color:#1b0613;
-      font-weight:800;
-      cursor:pointer;
-      box-shadow:0 10px 28px rgba(255,79,184,.35);
-      margin-bottom:14px;
-    }
-
-    .pick:hover{
-      filter:brightness(1.05);
-    }
-
-    #preview{
-      margin-top:16px;
-    }
-
-    #preview img{
-      max-width:100%;
-      border-radius:14px;
-      border:1px solid var(--border);
-    }
-
-    .submit-btn{
-      margin-top:16px;
-      width:100%;
-      padding:14px 16px;
-      border-radius:14px;
-      border:0;
-      background:linear-gradient(180deg,var(--gold),#ffd97a);
-      color:#1a1200;
-      font-weight:800;
-      cursor:pointer;
-    }
-
-    .submit-btn:disabled{
-      opacity:.5;
-      cursor:not-allowed;
-    }
-
-    .back{
-      display:inline-block;
-      margin-top:16px;
-      color:var(--muted);
+      gap:8px;
+      margin-top:14px;
       font-size:14px;
-      text-decoration:none;
+      color:var(--muted);
     }
+    .spinner{
+      width:16px;
+      height:16px;
+      border:3px solid rgba(255,255,255,.25);
+      border-top-color:var(--gold);
+      border-radius:50%;
+      animation:spin .8s linear infinite;
+    }
+    @keyframes spin{ to{ transform:rotate(360deg); } }
+    .hidden{ display:none; }
   </style>
 </head>
 
 <body>
   <div class="card">
     <h1>Upload your poem</h1>
-    <p>
-      Choose a photo of your handwritten or printed poetry.
-      We’ll translate it instantly.
-    </p>
+    <p>Choose a photo of your handwritten or printed poetry.</p>
 
     <form id="uploadForm" method="POST"
           action="{{ url_for('translate_image') }}"
           enctype="multipart/form-data">
 
-      <label for="file-upload" class="pick">
-        📷 Choose image
-      </label>
+      <label for="file-upload" class="pick">📷 Choose image</label>
       <input id="file-upload" type="file" name="image" accept="image/*" required>
 
       <div id="preview"></div>
@@ -137,30 +48,42 @@
       <button class="submit-btn" type="submit" disabled>
         Translate ✨
       </button>
+
+      <!-- PROCESSING INDICATOR (NEW) -->
+      <div id="processing" class="processing hidden">
+        <div class="spinner"></div>
+        <span>Processing…</span>
+      </div>
     </form>
 
-    <a class="back" href="{{ url_for('upload_form') }}">
-      ← Back
-    </a>
+    <a class="back" href="{{ url_for('upload_form') }}">← Back</a>
   </div>
 
   <script>
-    const fileInput = document.getElementById('file-upload');
-    const preview = document.getElementById('preview');
-    const submitBtn = document.querySelector('.submit-btn');
+    const fileInput  = document.getElementById("file-upload");
+    const preview    = document.getElementById("preview");
+    const submitBtn  = document.querySelector(".submit-btn");
+    const form       = document.getElementById("uploadForm");
+    const processing = document.getElementById("processing");
 
-    fileInput.addEventListener('change', () => {
-      preview.innerHTML = '';
+    fileInput.addEventListener("change", () => {
+      preview.innerHTML = "";
       submitBtn.disabled = true;
 
       const file = fileInput.files[0];
-      if(!file || !file.type.startsWith('image/')) return;
+      if(!file || !file.type.startsWith("image/")) return;
 
-      const img = document.createElement('img');
+      const img = document.createElement("img");
       img.src = URL.createObjectURL(file);
       preview.appendChild(img);
 
       submitBtn.disabled = false;
+    });
+
+    form.addEventListener("submit", () => {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Processing…";
+      processing.classList.remove("hidden");
     });
   </script>
 </body>
