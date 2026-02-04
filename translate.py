@@ -9,9 +9,9 @@ from langdetect import detect, DetectorFactory
 DetectorFactory.seed = 0  # make results deterministic
 
 load_dotenv()
-DEEPL_KEY = (os.getenv("DEEPL_API_KEY") or "").strip()
-if not DEEPL_KEY:
-    raise RuntimeError("DEEPL_API_KEY is missing")
+def _require_deepl_key():
+    if not os.getenv("DEEPL_API_KEY"):
+        raise RuntimeError("DEEPL_API_KEY is missing")
 
 GLOSSARY_DE_EN = (os.getenv("DEEPL_GLOSSARY_ID_DE_EN") or "").strip()
 GLOSSARY_FR_EN = (os.getenv("DEEPL_GLOSSARY_ID_FR_EN") or "").strip()
@@ -184,6 +184,7 @@ def ocr_quality_hint(text: str) -> str | None:
 # -----------------------------
 
 def translate_to_english(text: str) -> tuple[str, str | None]:
+    _require_deepl_key()
     cleaned = cleanup_ocr_for_translation(text)
     corrected = apply_glossary(cleaned)
 
