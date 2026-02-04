@@ -42,7 +42,7 @@ services:
     volumes:
       - ./static:/app/static
       # If you have GeoIP DB on host:
-      # - ./infra/geoip/GeoLite2-Country.mmdb:/app/GeoLite2-Country.mmdb:ro
+      - ./infra/geoip/GeoLite2-Country.mmdb:/app/GeoLite2-Country.mmdb:ro
     depends_on:
       db:
         condition: service_healthy
