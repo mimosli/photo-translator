@@ -1,51 +1,107 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>Upload poem photo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
-    /* … YOUR EXISTING CSS … */
-      :root{
-    --bg:#06130f;
-    --panel:#0b1f18;
-    --text:#ffffff;
-    --muted:#c7d3cf;
-    --gold:#f7c948;
-    --radius:18px;
-  }
+    :root{
+      --bg:#06130f;
+      --panel:#0b1f18;
+      --text:#ffffff;
+      --muted:#c7d3cf;
+      --gold:#f7c948;
+      --pink:#ff4fb8;
+      --border:rgba(255,255,255,.12);
+      --radius:18px;
+    }
 
-  *{ box-sizing:border-box; }
+    *{ box-sizing:border-box; }
 
-  body{
-    margin:0;
-    min-height:100vh;
-    background: linear-gradient(180deg,#04110d,var(--bg));
-    color:var(--text);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
+    body{
+      margin:0;
+      min-height:100vh;
+      background:
+        radial-gradient(900px 500px at 20% 10%, rgba(255,79,184,.18), transparent 55%),
+        radial-gradient(900px 500px at 85% 20%, rgba(247,201,72,.16), transparent 55%),
+        linear-gradient(180deg,#04110d,var(--bg));
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
 
-  .card{
-    background:rgba(11,31,24,.8);
-    padding:28px;
-    border-radius:var(--radius);
-    max-width:420px;
-    width:100%;
-  }
-    /* --- Processing indicator (NEW) --- */
+    .card{
+      width:100%;
+      max-width:480px;
+      background:rgba(11,31,24,.8);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:28px;
+      box-shadow:0 20px 60px rgba(0,0,0,.45);
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size:26px;
+    }
+
+    p{
+      margin:0 0 16px;
+      color:var(--muted);
+      line-height:1.5;
+    }
+
+    .picker{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:14px 18px;
+      border-radius:16px;
+      background:linear-gradient(180deg,var(--pink),#ff77cb);
+      color:#1b0613;
+      font-weight:800;
+      cursor:pointer;
+      margin-bottom:14px;
+    }
+
+    input[type="file"]{ display:none; }
+
+    #preview img{
+      max-width:100%;
+      border-radius:14px;
+      border:1px solid var(--border);
+      margin-top:12px;
+    }
+
+    button{
+      width:100%;
+      padding:14px;
+      border-radius:14px;
+      border:0;
+      font-weight:800;
+      background:linear-gradient(180deg,var(--gold),#ffd97a);
+      color:#1a1200;
+      cursor:pointer;
+      margin-top:14px;
+    }
+
+    button[disabled]{
+      opacity:.5;
+      cursor:not-allowed;
+    }
+
     .processing{
       display:flex;
-      justify-content:center;
       align-items:center;
       gap:8px;
-      margin-top:14px;
-      font-size:14px;
+      font-size:13px;
       color:var(--muted);
+      margin-top:10px;
     }
+
     .spinner{
       width:16px;
       height:16px;
@@ -54,6 +110,7 @@
       border-radius:50%;
       animation:spin .8s linear infinite;
     }
+
     @keyframes spin{ to{ transform:rotate(360deg); } }
     .hidden{ display:none; }
   </style>
@@ -62,36 +119,34 @@
 <body>
   <div class="card">
     <h1>Upload your poem</h1>
-    <p>Choose a photo of your handwritten or printed poetry.</p>
+    <p>Select a photo of your handwritten or printed poem.</p>
 
-    <form id="uploadForm" method="POST"
+    <form method="POST"
           action="{{ url_for('translate_image') }}"
           enctype="multipart/form-data">
 
-      <label for="file-upload" class="pick">📷 Choose image</label>
-      <input id="file-upload" type="file" name="image" accept="image/*" required>
+      <label class="picker">
+        📷 Choose image
+        <input id="fileInput" type="file" name="image" accept="image/*" required>
+      </label>
 
       <div id="preview"></div>
 
-      <button class="submit-btn" type="submit" disabled>
+      <button id="submitBtn" type="submit" disabled>
         Translate ✨
       </button>
 
-      <!-- PROCESSING INDICATOR (NEW) -->
       <div id="processing" class="processing hidden">
         <div class="spinner"></div>
         <span>Processing…</span>
       </div>
     </form>
-
-    <a class="back" href="{{ url_for('upload_form') }}">← Back</a>
   </div>
 
   <script>
-    const fileInput  = document.getElementById("file-upload");
-    const preview    = document.getElementById("preview");
-    const submitBtn  = document.querySelector(".submit-btn");
-    const form       = document.getElementById("uploadForm");
+    const fileInput = document.getElementById("fileInput");
+    const preview = document.getElementById("preview");
+    const submitBtn = document.getElementById("submitBtn");
     const processing = document.getElementById("processing");
 
     fileInput.addEventListener("change", () => {
@@ -108,9 +163,8 @@
       submitBtn.disabled = false;
     });
 
-    form.addEventListener("submit", () => {
+    submitBtn.closest("form").addEventListener("submit", () => {
       submitBtn.disabled = true;
-      submitBtn.textContent = "Processing…";
       processing.classList.remove("hidden");
     });
   </script>

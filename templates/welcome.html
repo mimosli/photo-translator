@@ -176,8 +176,13 @@
         form.append("image", file);
         const res = await fetch("/translate", { method:"POST", body:form });
         const html = await res.text();
-        if(!res.ok) throw new Error("Translation failed");
-        document.open(); document.write(html); document.close();
+        if (!res.ok) {
+          throw new Error(`Server error (${res.status})`);
+        }
+
+        if (!html.trim()) {
+          throw new Error("Server returned empty HTML");
+        };
       }catch(e){
         status.textContent = e.message;
         processing.classList.add("hidden");
