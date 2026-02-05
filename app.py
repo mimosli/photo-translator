@@ -209,6 +209,7 @@ def _save_normalized_image(file_storage, out_path: str) -> int:
 # ──────────────────────────────────────────────────────────────────────────────
 # Routes
 # ──────────────────────────────────────────────────────────────────────────────
+
 @app.get("/")
 def upload_form():
     host = request.host.split(":")[0]
