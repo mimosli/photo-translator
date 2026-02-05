@@ -2,14 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Photo Translator</title>
 
   <style>
     :root{
       --bg:#06130f;
       --panel:#0b1f18;
-      --panel-2:#0e2a20;
       --text:#ffffff;
       --muted:#c7d3cf;
       --gold:#f7c948;
@@ -29,26 +28,24 @@
         linear-gradient(180deg,#04110d,var(--bg));
       color:var(--text);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-    }
-
-    .container{
-      max-width:900px;
-      margin:0 auto;
-      padding:24px;
-      padding-bottom:120px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
     }
 
     .card{
-      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+      width:100%;
+      max-width:520px;
+      background:rgba(11,31,24,.75);
       border:1px solid var(--border);
       border-radius:var(--radius);
       padding:28px;
-      margin-bottom:16px;
+      box-shadow:0 20px 60px rgba(0,0,0,.45);
     }
 
     h1{
       margin:0 0 10px;
-      font-size:32px;
+      font-size:28px;
       letter-spacing:-.02em;
     }
 
@@ -58,87 +55,64 @@
       line-height:1.5;
     }
 
-    /* upload */
     .picker{
       display:inline-flex;
       align-items:center;
       gap:10px;
       padding:14px 18px;
-      border-radius:14px;
+      border-radius:16px;
       background:linear-gradient(180deg,var(--pink),#ff77cb);
       color:#1b0613;
       font-weight:800;
       cursor:pointer;
+      margin-bottom:14px;
     }
 
     input[type="file"]{ display:none; }
 
     #preview img{
-      margin-top:14px;
       max-width:100%;
       border-radius:14px;
       border:1px solid var(--border);
-    }
-
-    #status{
       margin-top:12px;
-      font-size:14px;
-      min-height:20px;
-    }
-    .ok{ color:#68ffbe; }
-    .err{ color:#ff8a8a; }
-
-    /* actions */
-    .actions{
-      position:fixed;
-      left:0; right:0; bottom:0;
-      padding:14px;
-      background:linear-gradient(180deg,rgba(6,19,15,0),rgba(6,19,15,.95));
-      border-top:1px solid var(--border);
-    }
-    .actions-inner{
-      max-width:900px;
-      margin:0 auto;
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
     }
 
     button{
-      border:0;
+      width:100%;
+      padding:14px;
       border-radius:14px;
-      padding:12px 16px;
+      border:0;
       font-weight:800;
+      background:linear-gradient(180deg,var(--gold),#ffd97a);
+      color:#1a1200;
       cursor:pointer;
+      margin-top:14px;
     }
+
     button[disabled]{
-      opacity:.45;
+      opacity:.5;
       cursor:not-allowed;
     }
 
-    .btn-primary{
-      background:linear-gradient(180deg,var(--gold),#ffd97a);
-      color:#1a1200;
+    #status{
+      margin-top:10px;
+      font-size:14px;
+      min-height:20px;
     }
-    .btn-ghost{
-      background:rgba(255,255,255,.06);
-      border:1px solid var(--border);
-      color:var(--text);
-    }
+    .err{ color:#ff8a8a; }
 
-    /* --- Processing indicator --- */
     .processing{
-      display:inline-flex;
+      display:flex;
       align-items:center;
       gap:8px;
       font-size:13px;
       color:var(--muted);
-      margin-top:8px;
+      margin-top:10px;
     }
     .spinner{
       width:16px;
       height:16px;
-      border:3px solid rgba(255,255,255,.2);
+      border:3px solid rgba(255,255,255,.25);
       border-top-color:var(--gold);
       border-radius:50%;
       animation:spin .8s linear infinite;
@@ -149,128 +123,65 @@
 </head>
 
 <body>
-  <main class="container">
-    <section class="card">
-      <h1>Translate your poem</h1>
-      <p>
-        Upload a photo of your poem and get a clean English translation.
-      </p>
+  <h1 style="color:white">VISIBLE TEST</h1>
+  <div class="card">
+    <h1>Translate your poem</h1>
+    <p>Upload a photo of your poem and get an English translation.</p>
 
-      <label class="picker">
-        📷 Choose image
-        <input id="fileInput" type="file" accept="image/*">
-      </label>
+    <label class="picker">
+      📷 Choose image
+      <input id="fileInput" type="file" accept="image/*">
+    </label>
 
-      <div id="preview"></div>
+    <div id="preview"></div>
 
-      <div id="status" role="status" aria-live="polite"></div>
+    <button id="translateBtn" disabled>Translate ✨</button>
 
-      <div id="processing" class="processing hidden">
-        <div class="spinner"></div>
-        <span id="processingText">Processing…</span>
-      </div>
-    </section>
-  </main>
+    <div id="status"></div>
 
-  <footer class="actions">
-    <div class="actions-inner">
-      <button id="translateBtn" class="btn-primary" disabled>
-        Translate ✨
-      </button>
-      <button id="clearBtn" class="btn-ghost" disabled>
-        Remove
-      </button>
+    <div id="processing" class="processing hidden">
+      <div class="spinner"></div>
+      <span>Processing…</span>
     </div>
-  </footer>
+  </div>
 
   <script>
-    const fileInput  = document.getElementById("fileInput");
-    const preview    = document.getElementById("preview");
-    const statusEl   = document.getElementById("status");
+    const fileInput = document.getElementById("fileInput");
+    const preview = document.getElementById("preview");
     const translateBtn = document.getElementById("translateBtn");
-    const clearBtn     = document.getElementById("clearBtn");
+    const processing = document.getElementById("processing");
+    const status = document.getElementById("status");
 
-    const processingEl   = document.getElementById("processing");
-    const processingText = document.getElementById("processingText");
-
-    let selectedFile = null;
-
-    function statusOk(msg){
-      statusEl.className = "ok";
-      statusEl.textContent = msg;
-    }
-    function statusErr(msg){
-      statusEl.className = "err";
-      statusEl.textContent = msg;
-    }
-    function statusNeutral(msg){
-      statusEl.className = "";
-      statusEl.textContent = msg || "";
-    }
-
-    function showProcessing(text){
-      processingText.textContent = text || "Processing…";
-      processingEl.classList.remove("hidden");
-    }
-    function hideProcessing(){
-      processingEl.classList.add("hidden");
-    }
+    let file = null;
 
     fileInput.addEventListener("change", () => {
       preview.innerHTML = "";
-      statusNeutral("");
-      selectedFile = null;
-
-      const file = fileInput.files[0];
-      if(!file || !file.type.startsWith("image/")) return;
-
-      selectedFile = file;
+      status.textContent = "";
+      file = fileInput.files[0];
+      if(!file) return;
 
       const img = document.createElement("img");
       img.src = URL.createObjectURL(file);
       preview.appendChild(img);
-
       translateBtn.disabled = false;
-      clearBtn.disabled = false;
-    });
-
-    clearBtn.addEventListener("click", () => {
-      fileInput.value = "";
-      preview.innerHTML = "";
-      selectedFile = null;
-      translateBtn.disabled = true;
-      clearBtn.disabled = true;
-      statusNeutral("");
-      hideProcessing();
     });
 
     translateBtn.addEventListener("click", async () => {
-      if(!selectedFile) return;
-
+      if(!file) return;
       translateBtn.disabled = true;
-      clearBtn.disabled = true;
-      showProcessing("Running OCR & translation…");
+      processing.classList.remove("hidden");
 
       try{
         const form = new FormData();
-        form.append("image", selectedFile);
-
-        const res = await fetch("/translate", {
-          method:"POST",
-          body: form
-        });
-
-        const body = await res.text();
-        if(!res.ok) throw new Error("Translation failed.");
-
-        document.open();
-        document.write(body);
-        document.close();
-      }catch(err){
-        statusErr(err.message || "Something went wrong.");
-        hideProcessing();
+        form.append("image", file);
+        const res = await fetch("/translate", { method:"POST", body:form });
+        const html = await res.text();
+        if(!res.ok) throw new Error("Translation failed");
+        document.open(); document.write(html); document.close();
+      }catch(e){
+        status.textContent = e.message;
+        processing.classList.add("hidden");
         translateBtn.disabled = false;
-        clearBtn.disabled = false;
       }
     });
   </script>
