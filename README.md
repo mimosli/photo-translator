@@ -1,3 +1,12 @@
+Standard commands:
+1) source venv/bin/activate
+
+And for the docker commands:
+sudo docker-compose build --no-cache web
+sudo docker-compose up -d web
+
+
+
 MVP architecture:
 
 Users (Browser / Mobile)
