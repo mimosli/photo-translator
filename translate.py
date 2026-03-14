@@ -129,32 +129,41 @@ def get_glossary_id_for_pair(src: str, tgt: str) -> str | None:
 # DeepL translation
 # -----------------------------
 
+# Markers used to preserve poem line breaks through DeepL translation.
+# DeepL passes tokens it doesn't recognise as words through unchanged.
+_STANZA_MARKER = " \u27e8SB\u27e9 "   # ⟨SB⟩ — stanza (blank line) break
+_LINE_MARKER   = " \u27e8LB\u27e9 "   # ⟨LB⟩ — single line break
+
+
+def _encode_linebreaks(text: str) -> str:
+    """Replace newlines with markers so DeepL preserves poem structure."""
+    return text.replace("\n\n", _STANZA_MARKER).replace("\n", _LINE_MARKER)
+
+
+def _decode_linebreaks(text: str) -> str:
+    """Restore newlines from markers after translation."""
+    return text.replace(_STANZA_MARKER, "\n\n").replace(_LINE_MARKER, "\n")
+
+
 def translate_to_english(text: str) -> tuple[str, str | None]:
     """
     Translates OCR text to English (lowercase).
     Automatically detects source language via DeepL.
-    Supports DE, FR, ES, PL (and more).
+    Preserves poem line breaks via marker substitution.
     """
     _require_deepl_key()
 
     cleaned = cleanup_ocr_for_translation(text)
     corrected = apply_glossary(cleaned)
+    encoded = _encode_linebreaks(corrected)
 
     translator = deepl.Translator(DEEPL_KEY)
 
     params = {
-        "text": corrected,
+        "text": encoded,
         "target_lang": "EN-GB",
         # source_lang intentionally omitted → DeepL auto-detects
     }
-
-    # Attach glossary if DeepL tells us the detected language
-    sig = inspect.signature(translator.translate_text)
-    if USE_GLOSSARY and "glossary" in sig.parameters:
-        # We only know detected language AFTER translation,
-        # but DeepL allows glossary with auto-detection.
-        # So we apply glossary conditionally after detection.
-        pass
 
     result = translator.translate_text(**params)
 
@@ -168,6 +177,6 @@ def translate_to_english(text: str) -> tuple[str, str | None]:
             result = translator.translate_text(**params)
             detected = getattr(result, "detected_source_lang", detected)
 
-    translated = result.text.lower()  # 👈 enforce lowercase
+    translated = _decode_linebreaks(result.text).lower()
 
     return translated, detected
