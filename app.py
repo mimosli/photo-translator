@@ -99,10 +99,13 @@ COUNTRY_GAUGE = Gauge(
 )
 
 
+_TRANSLATE_ENDPOINTS = {"translate_image", "api_translate"}
+
+
 @app.before_request
 def before_request():
-    # time only translate endpoint
-    if request.endpoint == "translate_image":
+    # time only translate endpoints
+    if request.endpoint in _TRANSLATE_ENDPOINTS:
         g._t_start = time.perf_counter()
 
 
@@ -110,7 +113,7 @@ def before_request():
 def after_request(response):
     # metrics best-effort; never break response
     try:
-        if request.endpoint == "translate_image":
+        if request.endpoint in _TRANSLATE_ENDPOINTS:
             TRANSLATE_COUNTER.inc()
             t0 = getattr(g, "_t_start", None)
             if t0 is not None:
@@ -119,7 +122,7 @@ def after_request(response):
         if request.endpoint == "api_upload":
             UPLOAD_COUNTER.inc()
 
-        if request.endpoint in {"translate_image", "api_upload"}:
+        if request.endpoint in _TRANSLATE_ENDPOINTS | {"api_upload"}:
             ip = get_client_ip()
             country = get_country_from_ip(ip)
             COUNTRY_GAUGE.labels(country=country).inc()
@@ -271,15 +274,12 @@ def api_upload():
     return jsonify({"ok": True, "url": url, "bytes": len(jpeg_bytes)}), 200
 
 
-@app.route("/translate", methods=["POST"])
-def translate_image():
-    # Validate upload
-    if "image" not in request.files:
-        return "No file part", 400
-    f = request.files["image"]
-    if not f or f.filename == "":
-        return "No selected file", 400
-
+def _run_translate_pipeline(f):
+    """
+    Shared logic for translate endpoints.
+    Returns a dict with keys: original_image_url, extracted_text, translated_text,
+    ocr_error, translation_error. Raises ValueError on bad input.
+    """
     ip = get_client_ip()
     country = get_country_from_ip(ip)
     ua = request.headers.get("User-Agent", "")
@@ -290,10 +290,7 @@ def translate_image():
     filename = f"{base}_{int(time.time())}_{uuid4().hex[:6]}.jpg"
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 
-    try:
-        _save_normalized_image(f, filepath)
-    except ValueError as e:
-        return str(e), 400
+    _save_normalized_image(f, filepath)
 
     # OCR
     extracted_text = ""
@@ -323,14 +320,66 @@ def translate_image():
     )
     db_insert_upload(filename=filename, client_ip=ip, user_agent=ua, country=country)
 
+    return {
+        "original_image_url": url_for("static", filename=f"uploads/{filename}"),
+        "extracted_text": extracted_text,
+        "translated_text": translated_text,
+        "ocr_error": ocr_error,
+        "translation_error": translation_error,
+    }
+
+
+@app.route("/api/translate", methods=["POST"])
+def api_translate():
+    """JSON endpoint used by the frontend JS."""
+    if "image" not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    f = request.files["image"]
+    if not f or f.filename == "":
+        return jsonify({"error": "No selected file"}), 400
+
+    try:
+        result = _run_translate_pipeline(f)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+    return jsonify(result), 200
+
+
+@app.route("/translate", methods=["POST"])
+def translate_image():
+    """Legacy HTML endpoint (kept for direct form submissions)."""
+    if "image" not in request.files:
+        return "No file part", 400
+    f = request.files["image"]
+    if not f or f.filename == "":
+        return "No selected file", 400
+
+    try:
+        ctx = _run_translate_pipeline(f)
+    except ValueError as e:
+        return str(e), 400
+
     return render_template(
         "result.html",
-        original_image=url_for("static", filename=f"uploads/{filename}"),
-        extracted_text=extracted_text,
-        translated_text=translated_text,
-        ocr_error=ocr_error,
-        translation_error=translation_error,
+        original_image=ctx["original_image_url"],
+        extracted_text=ctx["extracted_text"],
+        translated_text=ctx["translated_text"],
+        ocr_error=ctx["ocr_error"],
+        translation_error=ctx["translation_error"],
     )
+
+
+@app.route("/result")
+def result_page():
+    """Serves the result.html shell; JS reads data from sessionStorage."""
+    return render_template("result.html")
+
+
+@app.route("/upload")
+def upload_page():
+    """Alias for the root upload form."""
+    return render_template("upload.html")
 
 
 @app.route("/healthz")

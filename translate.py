@@ -144,8 +144,8 @@ def translate_to_english(text: str) -> tuple[str, str | None]:
 
     params = {
         "text": corrected,
-        "source_lang": "auto",   # 👈 DeepL auto-detection
         "target_lang": "EN-GB",
+        # source_lang intentionally omitted → DeepL auto-detects
     }
 
     # Attach glossary if DeepL tells us the detected language

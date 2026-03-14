@@ -7,12 +7,11 @@
 
   <style>
     :root{
-      /* Palette (requested) */
-      --bg: #06130f;            /* dark green */
-      --panel: #0b1f18;         /* deep green panel */
+      --bg: #06130f;
+      --panel: #0b1f18;
       --panel-2:#0e2a20;
-      --text: #ffffff;          /* white */
-      --muted:#c7d3cf;          /* cool gray/green */
+      --text: #ffffff;
+      --muted:#c7d3cf;
       --border: rgba(255,255,255,.10);
 
       --pink:#ff4fb8;
@@ -21,14 +20,12 @@
 
       --shadow: 0 18px 50px rgba(0,0,0,.45);
       --radius: 18px;
-
       --focus: 0 0 0 3px rgba(247,201,72,.25);
     }
 
     *{ box-sizing:border-box; }
-    html,body{ height:100%; }
+    html,body{ height:100%; margin:0; }
     body{
-      margin:0;
       background:
         radial-gradient(900px 500px at 20% 10%, rgba(255,79,184,.18), transparent 55%),
         radial-gradient(900px 500px at 85% 20%, rgba(247,201,72,.16), transparent 55%),
@@ -36,200 +33,133 @@
         linear-gradient(180deg, #04110d, var(--bg));
       color:var(--text);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      /* vertically center the card on larger screens */
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding: clamp(16px, 4vw, 40px) 16px 130px;
     }
 
-    .container{
-      max-width: 980px;
-      margin: 0 auto;
-      padding: clamp(16px, 4vw, 34px);
-      padding-bottom: 110px; /* room for sticky bar on mobile */
-    }
-
+    /* ── Card ── */
     .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      width: 100%;
+      max-width: 560px;
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: clamp(16px, 3.5vw, 28px);
+      padding: clamp(20px, 5vw, 32px);
       backdrop-filter: blur(8px);
-    }
-
-    .hero{ display:grid; gap: 10px; }
-
-    .badge-row{
       display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      margin-bottom: 6px;
+      flex-direction:column;
+      gap: 16px;
     }
 
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(11,31,24,.65);
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1;
-    }
-
-    .badge .dot{
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--gold);
-      box-shadow: 0 0 0 3px rgba(247,201,72,.18);
-    }
-
-    h1{
+    .card-title{
       margin:0;
-      font-size: clamp(24px, 5.2vw, 40px);
+      font-size: clamp(20px, 5vw, 26px);
       letter-spacing: -0.02em;
-      line-height: 1.1;
+      line-height: 1.15;
+      text-align:center;
     }
-
-    .subhead{
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.55;
-      font-size: clamp(14px, 2.2vw, 16px);
-      max-width: 70ch;
-    }
-
-    .quick-steps{
-      display:grid;
-      gap: 10px;
-      margin-top: 14px;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    @media (max-width: 720px){
-      .quick-steps{ grid-template-columns: 1fr; }
-    }
-
-    .step{
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 14px;
-      padding: 12px 12px;
-      background: rgba(11,31,24,.55);
-      display:flex;
-      gap: 10px;
-      align-items:flex-start;
-      min-height: 62px;
-    }
-    .step .num{
-      width: 28px;
-      height: 28px;
-      border-radius: 10px;
-      display:grid;
-      place-items:center;
-      font-weight: 800;
-      color: #1a1200;
-      background: linear-gradient(180deg, var(--gold), #ffd97a);
-      flex: 0 0 auto;
-    }
-    .step b{
-      display:block;
-      font-size: 14px;
-      margin-bottom: 2px;
-    }
-    .step span{
-      display:block;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.3;
-    }
-
-    /* Upload area */
-    .grid{
-      display:grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap: 14px;
-      margin-top: 16px;
-    }
-    @media (max-width: 920px){
-      .grid{ grid-template-columns: 1fr; }
-    }
-
-    .panel{
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: var(--radius);
-      padding: 16px;
-      background: rgba(11,31,24,.55);
-    }
-
-    .panel h2{
-      margin: 0 0 6px;
-      font-size: clamp(18px, 4.2vw, 24px);
-      letter-spacing: -0.01em;
-    }
-    .helper{
-      margin: 0 0 12px;
+    .card-sub{
+      margin: -8px 0 0;
       color: var(--muted);
       font-size: 13px;
       line-height: 1.5;
+      text-align:center;
     }
 
+    /* ── Pickers ── */
+    input[type="file"]{ display:none; }
+
     .picker-row{
-      display:flex;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
-      flex-wrap:wrap;
-      margin-top: 10px;
     }
 
     .pick{
-      display:inline-flex;
+      display:flex;
+      flex-direction:column;
       align-items:center;
-      gap:10px;
-      padding: 12px 14px;
-      border-radius: 14px;
-      border: 1px dashed rgba(255,255,255,.18);
+      justify-content:center;
+      gap: 8px;
+      padding: 18px 12px;
+      border-radius: 16px;
+      border: 1.5px dashed rgba(255,255,255,.18);
       background: rgba(14,42,32,.65);
       cursor:pointer;
       user-select:none;
       color: var(--text);
+      text-align:center;
       transition: transform .08s ease, border-color .12s ease, background .12s ease;
+      font-size: 28px; /* emoji */
+    }
+    .pick b{ display:block; font-size:14px; margin-top:2px; }
+    .pick small{ display:block; color:var(--muted); font-size:12px; font-weight:600; margin-top:2px; }
+
+    .pick--camera{
+      border-color: rgba(255,79,184,.35);
+      background: rgba(255,79,184,.08);
+    }
+    .pick--camera:hover{
+      border-color: rgba(255,79,184,.7);
+      background: rgba(255,79,184,.14);
+      transform: translateY(-2px);
     }
     .pick:hover{
-      transform: translateY(-1px);
       border-color: rgba(247,201,72,.5);
       background: rgba(14,42,32,.9);
+      transform: translateY(-2px);
     }
-    .pick:active{ transform: translateY(0px); }
-    input[type="file"]{ display:none; }
+    .pick:active{ transform: translateY(0); }
 
+    /* ── Hint boxes ── */
     .hint{
       display:flex;
       gap: 10px;
       align-items:flex-start;
-      padding: 10px 12px;
+      padding: 12px 14px;
       border-radius: 14px;
       border: 1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.03);
       color: var(--muted);
       font-size: 13px;
-      line-height: 1.35;
-      margin-top: 12px;
+      line-height: 1.4;
     }
-    .hint .lock{
-      width: 26px; height: 26px;
+    .hint .icon{
+      width: 28px; height: 28px;
       border-radius: 10px;
       display:grid; place-items:center;
-      background: rgba(247,201,72,.16);
-      color: var(--gold);
       flex: 0 0 auto;
+      font-size: 15px;
+    }
+    .hint b{ color: var(--text); }
+
+    /* Tip — gold highlight */
+    .hint--tip{
+      border-color: rgba(247,201,72,.35);
+      background: rgba(247,201,72,.07);
+    }
+    .hint--tip .icon{
+      background: rgba(247,201,72,.18);
     }
 
-    /* Preview / status */
+    /* Privacy — pink/green highlight */
+    .hint--privacy{
+      border-color: rgba(104,255,190,.25);
+      background: rgba(104,255,190,.05);
+    }
+    .hint--privacy .icon{
+      background: rgba(104,255,190,.14);
+    }
+
+    /* ── Preview / status ── */
     #preview{
       display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      grid-template-columns: 1fr;
       gap: 10px;
-      margin-top: 12px;
     }
     .previewWrap{
       position:relative;
@@ -246,11 +176,8 @@
     }
     .pill{
       position:absolute;
-      top:10px;
-      left:10px;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
+      top:10px; left:10px;
+      display:inline-flex; align-items:center; gap:8px;
       padding: 6px 8px;
       border-radius: 999px;
       background: rgba(0,0,0,.42);
@@ -265,16 +192,54 @@
     }
 
     #status{
-      margin-top: 10px;
       color: var(--muted);
       font-size: 14px;
       line-height: 1.4;
       min-height: 20px;
+      text-align:center;
     }
     .ok{ color: #68ffbe; }
     .err{ color: #ff8a8a; }
 
-    /* Sticky action bar (mobile friendly) */
+    /* ── Best results ── */
+    .best-results{
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      padding: 16px;
+      background: rgba(11,31,24,.55);
+    }
+    .best-results h3{
+      margin: 0 0 12px;
+      font-size: 15px;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+    .steps-row{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 480px){
+      .steps-row{ grid-template-columns: 1fr; }
+      .picker-row{ grid-template-columns: 1fr; }
+    }
+    .step{
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(6,19,15,.5);
+      display:flex; gap: 8px; align-items:flex-start;
+    }
+    .step .num{
+      width: 24px; height: 24px; border-radius: 8px;
+      display:grid; place-items:center;
+      font-weight: 800; font-size: 12px;
+      flex: 0 0 auto;
+    }
+    .step b{ display:block; font-size: 13px; margin-bottom: 2px; }
+    .step span{ display:block; color: var(--muted); font-size: 12px; line-height: 1.3; }
+
+    /* ── Sticky action bar ── */
     .actionbar{
       position: fixed;
       left: 0; right: 0; bottom: 0;
@@ -284,7 +249,7 @@
       border-top: 1px solid rgba(255,255,255,.10);
     }
     .actionbar .inner{
-      max-width: 980px;
+      max-width: 560px;
       margin: 0 auto;
       display:flex;
       gap: 10px;
@@ -298,60 +263,19 @@
       justify-content:flex-end;
     }
 
-    button{
-      appearance:none;
-      border:0;
-      cursor:pointer;
-      border-radius: 14px;
-      padding: 12px 14px;
-      font-weight: 800;
-      letter-spacing: .01em;
-      transition: transform .08s ease, opacity .12s ease, filter .12s ease;
-      outline: none;
-    }
-    button:focus{ box-shadow: var(--focus); }
-
-    .btn-primary{
-      background: linear-gradient(180deg, var(--pink), #ff77cb);
-      color: #1b0613;
-    }
-    .btn-primary:hover{ filter: brightness(1.03); transform: translateY(-1px); }
-
-    .btn-secondary{
-      background: linear-gradient(180deg, var(--gold), #ffd97a);
-      color: #1a1200;
-    }
-    .btn-secondary:hover{ filter: brightness(1.03); transform: translateY(-1px); }
-
-    .btn-ghost{
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.16);
-      color: var(--text);
-    }
-    .btn-ghost:hover{ transform: translateY(-1px); }
-
-    button[disabled]{
-      opacity: .45;
-      cursor: not-allowed;
-      transform: none !important;
-    }
-
-    /* Small “progress” label */
     .progress{
       display:flex;
-      gap: 10px;
+      gap: 8px;
       align-items:center;
       color: var(--muted);
-      font-size: 13px;
-      min-width: 220px;
+      font-size: 12px;
     }
     .meter{
-      height: 8px;
-      width: 130px;
+      height: 6px;
+      width: 80px;
       border-radius: 999px;
       background: rgba(255,255,255,.10);
       overflow:hidden;
-      border: 1px solid rgba(255,255,255,.12);
     }
     .meter > div{
       height: 100%;
@@ -360,161 +284,121 @@
       transition: width .18s ease;
     }
 
-    /* Reduce motion */
-    @media (prefers-reduced-motion: reduce){
-      *{ transition:none !important; }
+    button{
+      appearance:none; border:0; cursor:pointer;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-weight: 800;
+      letter-spacing: .01em;
+      transition: transform .08s ease, opacity .12s ease, filter .12s ease;
+      outline: none;
+      font-size: 14px;
     }
+    button:focus{ box-shadow: var(--focus); }
+    .btn-primary{ background: linear-gradient(180deg, var(--pink), #ff77cb); color: #1b0613; }
+    .btn-primary:hover{ filter: brightness(1.05); transform: translateY(-1px); }
+    .btn-secondary{ background: linear-gradient(180deg, var(--gold), #ffd97a); color: #1a1200; }
+    .btn-secondary:hover{ filter: brightness(1.05); transform: translateY(-1px); }
+    .btn-ghost{ background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.16); color: var(--text); }
+    .btn-ghost:hover{ transform: translateY(-1px); }
+    button[disabled]{ opacity: .4; cursor: not-allowed; transform: none !important; }
+
+    @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
   </style>
 </head>
 
 <body>
-  <main class="container">
-    <!-- HERO -->
-    <section class="card hero" aria-label="Intro">
-      <div class="badge-row">
-        <span class="badge"><span class="dot"></span> three-language experience</span>
-        <span class="badge">📚 poetry photo translator</span>
-        <span class="badge">🔒 secure upload</span>
+  <div class="card" role="main">
+
+    <h1 class="card-title">📷 Upload your poem</h1>
+    <p class="card-sub">
+      Max <strong id="limit-label">…</strong> — we resize automatically if needed.
+    </p>
+
+    <!-- Pickers -->
+    <div class="picker-row" aria-label="Image pickers">
+      <label class="pick pick--camera" for="cameraInput" title="Take a photo with your camera">
+        📷
+        <b>Take photo</b>
+        <small>best on mobile</small>
+      </label>
+      <input id="cameraInput" type="file" accept="image/*" capture="environment" />
+
+      <label class="pick" for="fileInput" title="Upload an existing image">
+        🖼️
+        <b>Upload image</b>
+        <small>from your device</small>
+      </label>
+      <input id="fileInput" type="file" accept="image/*" />
+    </div>
+
+    <!-- Tip (highlighted gold) -->
+    <div id="supportNote" class="hint hint--tip" aria-live="polite">
+      <div class="icon">💡</div>
+      <div>
+        <b>Tip</b><br/>
+        On phones, your browser may ask for camera permission. On desktop, "Take photo" may open a file picker.
       </div>
+    </div>
 
-      <h1>Translate your poem in seconds.</h1>
+    <!-- Preview + status -->
+    <div id="preview" aria-label="Preview"></div>
+    <div id="status" role="status" aria-live="polite"></div>
 
-      <p class="subhead">
-        Take a photo (or upload an image) of your poem and get a clean translation—fast, readable, and made for
-        the “my rollercoaster life” three-language journey.
-      </p>
-
-      <div class="quick-steps" role="list" aria-label="How it works">
-        <div class="step" role="listitem">
-          <div class="num">1</div>
-          <div>
-            <b>Upload your poem</b>
-            <span>Use camera on mobile or pick a photo.</span>
-          </div>
-        </div>
-        <div class="step" role="listitem">
-          <div class="num">2</div>
-          <div>
-            <b>Review the preview</b>
-            <span>We auto-resize to fit the limit.</span>
-          </div>
-        </div>
-        <div class="step" role="listitem">
-          <div class="num">3</div>
-          <div>
-            <b>Translate</b>
-            <span>Get the result instantly.</span>
-          </div>
-        </div>
+    <!-- Privacy note (highlighted green) -->
+    <div class="hint hint--privacy">
+      <div class="icon">🔒</div>
+      <div>
+        <b>Privacy</b><br/>
+        Your image is only used to extract and translate text. Keep personal details out of frame if you prefer.
       </div>
-    </section>
+    </div>
 
-    <!-- MAIN GRID -->
-    <section class="grid" style="margin-top:16px">
-      <!-- Left: Upload + Preview -->
-      <div class="panel" aria-label="Upload panel">
-        <h2>Upload your poem photo</h2>
-        <p class="helper">
-          Max size <strong id="limit-label">…</strong>. If needed, we’ll resize automatically for faster uploads.
-        </p>
-
-        <div class="picker-row" aria-label="Image pickers">
-          <label class="pick" for="cameraInput" title="Take a photo with your camera">
-            📷 <span><b>Take photo</b> <span style="
-         display:inline-flex;
-         align-items:center;
-         gap:10px;
-         padding:12px 16px;
-         border-radius:14px;
-         background:linear-gradient(180deg,#ff4fb8,#ff77cb);
-         color:#1b0613;
-         font-weight:700;
-         border:0;
-         cursor:pointer;
-         box-shadow:0 8px 22px rgba(255,79,184,.35);">best on mobile</span></span>
-          </label>
-          <input id="cameraInput" type="file" accept="image/*" capture="environment" />
-
-          <label class="pick" for="fileInput" title="Upload an existing image">
-            🖼️ <span><b>Upload image</b> <span style="display:block;color:var(--muted);font-size:12px;font-weight:600">from your device</span></span>
-          </label>
-          <input id="fileInput" type="file" accept="image/*" />
-        </div>
-
-        <div id="supportNote" class="hint" aria-live="polite">
-          <div class="lock">🛈</div>
-          <div>
-            <b style="color:var(--text)">Tip</b><br/>
-            On phones, your browser may ask for camera permission. On desktop, “Take photo” might open a file picker.
-          </div>
-        </div>
-
-        <div id="preview" aria-label="Preview"></div>
-        <div id="status" role="status" aria-live="polite"></div>
-
-        <div class="hint" style="margin-top:12px">
-          <div class="lock">🔒</div>
-          <div>
-            <b style="color:var(--text)">Privacy note</b><br/>
-            Your image is processed to translate your text. Keep personal details out of frame if you prefer.
-          </div>
-        </div>
-      </div>
-
-      <!-- Right: What happens next / friendly guidance -->
-      <aside class="panel" aria-label="Guidance">
-        <h2 style="margin-bottom:10px">For best results</h2>
-        <p class="helper" style="margin-bottom:10px">
-          These small tweaks improve OCR accuracy (especially for handwriting).
-        </p>
-
-        <div class="step" style="margin-bottom:10px">
+    <!-- Best results -->
+    <div class="best-results" aria-label="Tips for best results">
+      <h3>For best results</h3>
+      <div class="steps-row" role="list">
+        <div class="step" role="listitem">
           <div class="num" style="background:linear-gradient(180deg,var(--pink),#ff77cb);color:#220614">★</div>
           <div>
             <b>Good lighting</b>
             <span>Avoid shadows and glare. Keep the page flat.</span>
           </div>
         </div>
-
-        <div class="step" style="margin-bottom:10px">
+        <div class="step" role="listitem">
           <div class="num" style="background:linear-gradient(180deg,var(--red),#ff7a7a);color:#240606">✦</div>
           <div>
             <b>Fill the frame</b>
-            <span>Zoom so the poem text is large and sharp.</span>
+            <span>Zoom so the text is large and sharp.</span>
           </div>
         </div>
-
-        <div class="step">
+        <div class="step" role="listitem">
           <div class="num" style="background:linear-gradient(180deg,var(--gold),#ffd97a);color:#1a1200">✓</div>
           <div>
             <b>One page at a time</b>
-            <span>If it’s long, capture multiple photos.</span>
+            <span>Capture multiple photos if it's long.</span>
           </div>
         </div>
-      </aside>
-    </section>
-  </main>
+      </div>
+    </div>
+
+  </div>
 
   <!-- Sticky action bar -->
   <footer class="actionbar" aria-label="Actions">
     <div class="inner">
       <div class="progress">
-        <span id="progressText">Step 1/3: Upload</span>
+        <span id="progressText">Step 1/3</span>
         <div class="meter" aria-hidden="true"><div id="progressFill"></div></div>
       </div>
 
       <div class="actions">
-        <!-- Primary action = Translate -->
         <button id="translateBtn" class="btn-primary" disabled title="Translate the selected image">
           Translate ✨
         </button>
-
-        <!-- Secondary action = Save only -->
-        <button id="uploadBtn" class="btn-secondary" disabled title="Upload only (save image)">
+        <button id="uploadBtn" class="btn-secondary" disabled title="Save image only">
           Save image
         </button>
-
-        <!-- Tertiary = Clear -->
         <button id="clearBtn" class="btn-ghost" disabled title="Remove selected image">
           Remove
         </button>
@@ -582,9 +466,15 @@
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       const noteEl = dqs("#supportNote");
       noteEl.innerHTML = isMobile
-        ? '<div class="lock">🛈</div><div><b style="color:var(--text)">Tip</b><br/>Allow camera permissions so “Take photo” opens the camera directly.</div>'
-        : '<div class="lock">🛈</div><div><b style="color:var(--text)">Tip</b><br/>On desktop, “Take photo” may open a file picker (browser-dependent).</div>';
+        ? '<div class="icon">💡</div><div><b>Tip</b><br/>Allow camera permissions so "Take photo" opens the camera directly.</div>'
+        : '<div class="icon">💡</div><div><b>Tip</b><br/>On desktop, "Take photo" may open a file picker (browser-dependent).</div>';
     })();
+
+    // Auto-open camera when arriving from welcome page "Open translator" button
+    if(new URLSearchParams(window.location.search).get("camera") === "1"){
+      // Small delay so the page is fully painted before the dialog opens
+      setTimeout(() => dqs("#cameraInput").click(), 120);
+    }
 
     let processedBlob = null, processedName = null;
 
