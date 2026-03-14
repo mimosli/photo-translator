@@ -218,7 +218,6 @@
 
     const img = document.getElementById("img");
     const imgMissing = document.getElementById("imgMissing");
-    const ocr = document.getElementById("ocr");
     const translation = document.getElementById("translation");
 
     const errors = document.getElementById("errors");
@@ -226,11 +225,9 @@
 
     if(!data){
       translation.textContent = "(No result data found. Please go back and translate again.)";
-      ocr.textContent = "";
       imgMissing.style.display = "block";
     } else {
       translation.textContent = (data.translated_text || "").trim() || "(No translation returned.)";
-      ocr.textContent = (data.extracted_text || "").trim() || "(No readable text detected.)";
 
       const url = data.original_image_url;
       if(url){

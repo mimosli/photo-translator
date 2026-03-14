@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import re
-import inspect
 import deepl
 from dotenv import load_dotenv
 from glossary import apply_glossary
@@ -129,10 +128,29 @@ def get_glossary_id_for_pair(src: str, tgt: str) -> str | None:
 # DeepL translation
 # -----------------------------
 
-# Markers used to preserve poem line breaks through DeepL translation.
+# Markers used to preserve poem structure through DeepL translation.
 # DeepL passes tokens it doesn't recognise as words through unchanged.
-_STANZA_MARKER = " \u27e8SB\u27e9 "   # ⟨SB⟩ — stanza (blank line) break
-_LINE_MARKER   = " \u27e8LB\u27e9 "   # ⟨LB⟩ — single line break
+_STANZA_MARKER = " \u27e8SB\u27e9 "      # ⟨SB⟩ — stanza (blank line) break
+_LINE_MARKER   = " \u27e8LB\u27e9 "      # ⟨LB⟩ — single line break
+_PAGE_NUM_RE   = re.compile(             # lines that are just a page number
+    r'^\s*[-–—|]*\s*(?:p\.?|S\.?|s\.?)?\s*(\d{1,4})\s*[-–—|]*\s*$',
+    re.IGNORECASE,
+)
+
+
+def _protect_page_numbers(text: str) -> str:
+    """Replace page-number-only lines with ⟨PN:42⟩ markers before translation."""
+    lines = text.split("\n")
+    out = []
+    for line in lines:
+        m = _PAGE_NUM_RE.match(line)
+        out.append(f"\u27e8PN:{m.group(1)}\u27e9" if m else line)
+    return "\n".join(out)
+
+
+def _restore_page_numbers(text: str) -> str:
+    """Put the original page numbers back after translation."""
+    return re.sub(r'\u27e8PN:(\d+)\u27e9', r'\1', text)
 
 
 def _encode_linebreaks(text: str) -> str:
@@ -141,21 +159,24 @@ def _encode_linebreaks(text: str) -> str:
 
 
 def _decode_linebreaks(text: str) -> str:
-    """Restore newlines from markers after translation."""
-    return text.replace(_STANZA_MARKER, "\n\n").replace(_LINE_MARKER, "\n")
+    """Restore newlines from markers after translation (regex tolerates minor DeepL reformatting)."""
+    text = re.sub(r'\s*\u27e8\s*SB\s*\u27e9\s*', '\n\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'\s*\u27e8\s*LB\s*\u27e9\s*', '\n',   text, flags=re.IGNORECASE)
+    return text
 
 
 def translate_to_english(text: str) -> tuple[str, str | None]:
     """
     Translates OCR text to English (lowercase).
     Automatically detects source language via DeepL.
-    Preserves poem line breaks via marker substitution.
+    Preserves poem line breaks and page numbers via marker substitution.
     """
     _require_deepl_key()
 
     cleaned = cleanup_ocr_for_translation(text)
     corrected = apply_glossary(cleaned)
-    encoded = _encode_linebreaks(corrected)
+    protected = _protect_page_numbers(corrected)
+    encoded = _encode_linebreaks(protected)
 
     translator = deepl.Translator(DEEPL_KEY)
 
@@ -177,6 +198,6 @@ def translate_to_english(text: str) -> tuple[str, str | None]:
             result = translator.translate_text(**params)
             detected = getattr(result, "detected_source_lang", detected)
 
-    translated = _decode_linebreaks(result.text).lower()
+    translated = _restore_page_numbers(_decode_linebreaks(result.text)).lower()
 
     return translated, detected
