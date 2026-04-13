@@ -382,6 +382,21 @@ def upload_page():
     return render_template("upload.html")
 
 
+@app.route("/de")
+def landing_de():
+    return render_template("landing_de.html")
+
+
+@app.route("/en")
+def landing_en():
+    return render_template("landing_en.html")
+
+
+@app.route("/fr")
+def landing_fr():
+    return render_template("landing_fr.html")
+
+
 @app.route("/healthz")
 def healthz():
     return jsonify(status="ok", version="1.1"), 200

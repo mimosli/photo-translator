@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>my roller-coaster life – leila frey</title>
+  <meta name="description" content="my roller-coaster life — i own it, you own yours. Ein Gedichtband über Liebe, Schmerz, Freiheit und alles dazwischen. Von leila frey." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink:       #e8527c;
+      --pink-dark:  #c93f66;
+      --coral:      #e8643a;
+      --gold:       #d4a055;
+      --gold-light: #f0c878;
+      --cream:      #fff8f4;
+      --white:      #ffffff;
+      --dark:       #1a0e12;
+      --dark2:      #2d1820;
+      --muted:      #7a5060;
+      --ff-head:    'Playfair Display', Georgia, serif;
+      --ff-body:    'DM Sans', sans-serif;
+      --max:        1100px;
+      --radius:     16px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--cream);
+      color: var(--dark);
+      font-family: var(--ff-body);
+      font-weight: 400;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--cream); }
+    ::-webkit-scrollbar-thumb { background: var(--pink); border-radius: 3px; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2.5rem;
+      background: rgba(255,248,244,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(232,82,124,0.12);
+      gap: 1rem;
+    }
+    .nav-logo {
+      font-family: var(--ff-head); font-style: italic;
+      font-size: 1.1rem; color: var(--pink);
+      text-decoration: none; letter-spacing: 0.01em;
+    }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none;
+      font-size: 0.82rem; letter-spacing: 0.1em;
+      text-transform: uppercase; font-weight: 500; transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--pink); }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .lang-switch { display: flex; gap: 4px; }
+    .lang-switch a {
+      padding: 3px 9px; border-radius: 2rem;
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em;
+      text-decoration: none;
+      border: 1.5px solid rgba(232,82,124,0.25);
+      color: var(--muted); transition: all 0.2s;
+    }
+    .lang-switch a.active { background: var(--pink); color: white; border-color: var(--pink); }
+    .lang-switch a:hover:not(.active) { border-color: var(--pink); color: var(--pink); }
+    .nav-cta {
+      background: var(--pink); color: #fff;
+      padding: 0.5rem 1.4rem; border-radius: 2rem;
+      font-size: 0.8rem; font-weight: 500;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      text-decoration: none; transition: background 0.2s, transform 0.15s;
+    }
+    .nav-cta:hover { background: var(--pink-dark); transform: translateY(-1px); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center;
+      padding: 7rem 2rem 4rem; position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #fff0f3 0%, #fff8f4 50%, #fff5ec 100%);
+    }
+    .blob { position: absolute; border-radius: 50%; pointer-events: none; filter: blur(60px); opacity: 0.35; }
+    .blob-1 { width: 500px; height: 500px; background: var(--pink); top: -100px; right: -100px; }
+    .blob-2 { width: 350px; height: 350px; background: var(--coral); bottom: -50px; left: 10%; }
+    .blob-3 { width: 250px; height: 250px; background: var(--gold); top: 30%; left: -80px; }
+
+    .hero-inner {
+      max-width: var(--max); width: 100%; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 4rem; align-items: center; position: relative; z-index: 1;
+    }
+    .hero-visual {
+      position: relative; display: flex;
+      justify-content: center; align-items: center; height: 560px;
+    }
+    .book-img {
+      width: 240px; aspect-ratio: 2/3;
+      border-radius: 4px 14px 14px 4px; object-fit: cover;
+      box-shadow: -5px 8px 0 rgba(26,14,18,0.15), 0 30px 70px rgba(232,82,124,0.3), 0 0 0 1px rgba(232,82,124,0.1);
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-70%, -50%) rotate(-3deg);
+      z-index: 3; transition: transform 0.5s cubic-bezier(.23,1,.32,1);
+    }
+    .book-img:hover { transform: translate(-70%, -54%) rotate(-1deg) scale(1.02); }
+    .book-placeholder {
+      width: 240px; aspect-ratio: 2/3;
+      border-radius: 4px 14px 14px 4px;
+      background: linear-gradient(145deg, var(--pink), var(--coral));
+      box-shadow: -5px 8px 0 rgba(26,14,18,0.15), 0 30px 70px rgba(232,82,124,0.3);
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-70%, -50%) rotate(-3deg); z-index: 3;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 1.5rem; text-align: center; color: white;
+    }
+    .book-placeholder .bp-title { font-family: var(--ff-body); font-weight: 500; font-size: 1.3rem; line-height: 1.2; margin-bottom: 0.5rem; }
+    .book-placeholder .bp-sub { font-size: 0.65rem; letter-spacing: 0.1em; opacity: 0.85; margin-bottom: 1.5rem; }
+    .book-placeholder .bp-author { font-family: var(--ff-head); font-style: italic; font-size: 0.85rem; opacity: 0.9; }
+    .author-float {
+      width: 220px; height: 270px;
+      border-radius: 120px 120px 12px 12px;
+      object-fit: cover; object-position: center top;
+      box-shadow: 0 20px 50px rgba(232,82,124,0.2);
+      border: 4px solid white;
+      position: absolute; right: 0; top: 50%;
+      transform: translateY(-50%) rotate(2deg); z-index: 2;
+      transition: transform 0.4s ease;
+    }
+    .author-float:hover { transform: translateY(-54%) rotate(0deg); }
+    .badge-float {
+      position: absolute; bottom: 60px; left: 40px; z-index: 5;
+      background: white; border-radius: 14px; padding: 0.8rem 1.2rem;
+      box-shadow: 0 10px 30px rgba(232,82,124,0.15);
+      border: 1px solid rgba(232,82,124,0.12); font-size: 0.82rem;
+    }
+    .badge-float .badge-num { font-family: var(--ff-head); font-size: 1.6rem; color: var(--pink); line-height: 1; margin-bottom: 2px; }
+    .badge-float .badge-label { color: var(--muted); font-size: 0.72rem; }
+    .deco-circle { width: 160px; height: 160px; border: 2px solid var(--gold); border-radius: 50%; position: absolute; top: 30px; right: 30px; opacity: 0.4; z-index: 1; }
+    .deco-circle-sm { width: 80px; height: 80px; border: 1.5px solid var(--pink); border-radius: 50%; position: absolute; bottom: 80px; right: 90px; opacity: 0.3; z-index: 1; }
+
+    .hero-text { position: relative; z-index: 1; }
+    .hero-text .eyebrow {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--pink); margin-bottom: 1.5rem; font-weight: 500;
+    }
+    .eyebrow-dot { width: 6px; height: 6px; background: var(--gold); border-radius: 50%; }
+    .hero-text h1 {
+      font-family: var(--ff-body); font-weight: 300;
+      font-size: clamp(2.2rem, 4vw, 3.5rem); line-height: 1.1;
+      color: var(--dark); margin-bottom: 0.5rem; letter-spacing: -0.02em;
+    }
+    .hero-text h1 strong { font-weight: 500; color: var(--pink); }
+    .hero-subtitle { font-family: var(--ff-head); font-style: italic; font-size: clamp(1rem, 1.8vw, 1.3rem); color: var(--coral); margin-bottom: 1.8rem; letter-spacing: 0.02em; }
+    .hero-desc { font-size: 1rem; color: var(--muted); max-width: 420px; margin-bottom: 2.5rem; line-height: 1.85; }
+    .theme-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2.5rem; }
+    .pill {
+      padding: 0.3rem 0.9rem; border-radius: 2rem;
+      font-size: 0.75rem; font-weight: 500; letter-spacing: 0.05em;
+      border: 1.5px solid rgba(232,82,124,0.25); color: var(--pink);
+      background: rgba(232,82,124,0.06); transition: all 0.2s;
+    }
+    .pill:hover { background: var(--pink); color: white; border-color: var(--pink); }
+    .cta-row { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
+    .btn-main {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: linear-gradient(135deg, var(--pink), var(--coral));
+      color: white; text-decoration: none;
+      padding: 0.9rem 2rem; border-radius: 2rem;
+      font-weight: 500; font-size: 0.92rem; letter-spacing: 0.04em;
+      box-shadow: 0 8px 25px rgba(232,82,124,0.35);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-main:hover { transform: translateY(-2px); box-shadow: 0 14px 35px rgba(232,82,124,0.45); }
+    .btn-ghost { color: var(--muted); text-decoration: none; font-size: 0.85rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.35rem; transition: color 0.2s; }
+    .btn-ghost:hover { color: var(--pink); }
+
+    /* ── PROMO STRIP ── */
+    .promo-strip { background: linear-gradient(90deg, var(--pink), var(--coral)); color: white; padding: 0.85rem 2rem; text-align: center; font-size: 0.85rem; font-weight: 500; letter-spacing: 0.05em; }
+    .promo-strip a { color: white; font-weight: 700; text-decoration: underline; }
+
+    /* ── SECTIONS ── */
+    section { padding: 6rem 2rem; }
+    .container { max-width: var(--max); margin: 0 auto; }
+    .section-tag { display: inline-block; font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--pink); font-weight: 600; margin-bottom: 0.8rem; }
+    h2.section-heading { font-family: var(--ff-head); font-size: clamp(1.8rem, 3vw, 2.8rem); line-height: 1.15; color: var(--dark); margin-bottom: 1.2rem; }
+    h2.section-heading em { color: var(--pink); }
+    .section-body { color: var(--muted); font-size: 1rem; line-height: 1.85; max-width: 560px; }
+
+    /* ── ABOUT ── */
+    .about { background: white; }
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; }
+    .highlight-card { background: linear-gradient(135deg, #fff0f5, #fff8f0); border: 1px solid rgba(232,82,124,0.15); border-radius: var(--radius); padding: 2.5rem; position: relative; overflow: hidden; }
+    .highlight-card::before { content: '"'; position: absolute; top: -1rem; left: 1.2rem; font-family: var(--ff-head); font-size: 6rem; color: var(--pink); opacity: 0.15; line-height: 1; }
+    .highlight-card blockquote { font-family: var(--ff-head); font-style: italic; font-size: 1.25rem; line-height: 1.65; color: var(--dark); margin-bottom: 1.2rem; position: relative; }
+    .highlight-card cite { font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pink); font-style: normal; font-weight: 600; }
+    .about-stats { display: flex; gap: 2rem; margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid rgba(232,82,124,0.12); }
+    .stat-num { font-family: var(--ff-head); font-size: 2.2rem; color: var(--pink); line-height: 1; }
+    .stat-lbl { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
+
+    /* ── THEMES ── */
+    .themes-section { background: var(--cream); }
+    .themes-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.2rem; margin-top: 3rem; }
+    .theme-card { background: white; border-radius: var(--radius); padding: 1.8rem; border: 1px solid transparent; transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s; }
+    .theme-card:hover { border-color: var(--pink); transform: translateY(-4px); box-shadow: 0 12px 30px rgba(232,82,124,0.12); }
+    .tc-icon { font-size: 1.6rem; margin-bottom: 0.9rem; }
+    .tc-title { font-family: var(--ff-head); font-size: 1.05rem; color: var(--dark); margin-bottom: 0.4rem; }
+    .tc-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.65; }
+
+    /* ── POEM ── */
+    .poem-section { background: linear-gradient(135deg, var(--pink) 0%, var(--coral) 100%); color: white; text-align: center; }
+    .poem-section .section-tag { color: rgba(255,255,255,0.7); }
+    .poem-section h2.section-heading { color: white; }
+    .poem-section h2.section-heading em { color: var(--gold-light); }
+    .poem-box { max-width: 600px; margin: 3rem auto 0; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px); border-radius: 20px; padding: 3rem 2.5rem; }
+    .poem-text { font-family: var(--ff-head); font-style: italic; font-size: 1.15rem; line-height: 2.1; color: white; white-space: pre-line; margin-bottom: 1.5rem; }
+    .poem-credit { font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.65); }
+    .poem-divider { width: 40px; height: 2px; background: rgba(255,255,255,0.4); margin: 0 auto 1.5rem; }
+
+    /* ── PHOTO FEATURE ── */
+    .photo-section { background: white; padding: 0; overflow: hidden; }
+    .photo-grid { display: grid; grid-template-columns: 1fr 1fr; min-height: 520px; }
+    .photo-left { position: relative; overflow: hidden; }
+    .photo-left img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; transition: transform 0.6s ease; }
+    .photo-left:hover img { transform: scale(1.03); }
+    .photo-right { background: linear-gradient(135deg, #fff0f5, #fff8f0); padding: 5rem 4rem; display: flex; flex-direction: column; justify-content: center; }
+
+    /* ── AUTHOR ── */
+    .author-section { background: var(--cream); }
+    .author-grid { display: grid; grid-template-columns: 320px 1fr; gap: 5rem; align-items: center; }
+    .author-img-wrap { position: relative; }
+    .author-img { width: 100%; aspect-ratio: 3/4; border-radius: 120px 120px 20px 20px; object-fit: cover; object-position: center top; box-shadow: 0 30px 70px rgba(232,82,124,0.2); }
+    .author-img-placeholder { width: 100%; aspect-ratio: 3/4; border-radius: 120px 120px 20px 20px; background: linear-gradient(145deg, #ffd6e7, #ffe8d5); display: flex; align-items: center; justify-content: center; font-family: var(--ff-head); font-style: italic; font-size: 3rem; color: var(--pink); box-shadow: 0 30px 70px rgba(232,82,124,0.15); }
+    .author-badge { position: absolute; bottom: -16px; right: -16px; background: var(--pink); color: white; border-radius: 50%; width: 90px; height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-shadow: 0 8px 20px rgba(232,82,124,0.35); }
+    .author-badge .ab-num { font-family: var(--ff-head); font-size: 1.4rem; line-height: 1; }
+    .author-badge .ab-lbl { font-size: 0.6rem; letter-spacing: 0.08em; opacity: 0.9; margin-top: 2px; }
+    .author-text p { color: var(--muted); margin-bottom: 1rem; font-size: 0.97rem; line-height: 1.85; }
+    .author-links { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    .author-link { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--pink); text-decoration: none; font-size: 0.83rem; font-weight: 500; border: 1.5px solid rgba(232,82,124,0.3); padding: 0.4rem 1rem; border-radius: 2rem; transition: all 0.2s; }
+    .author-link:hover { background: var(--pink); color: white; border-color: var(--pink); }
+
+    /* ── REVIEWS ── */
+    .reviews-section { background: white; }
+    .reviews-section .section-tag { display: block; text-align: center; }
+    .reviews-section h2.section-heading { text-align: center; max-width: 500px; margin: 0 auto 0.5rem; }
+    .reviews-stars { text-align: center; font-size: 1.2rem; letter-spacing: 0.15em; color: var(--gold); margin-bottom: 3rem; }
+    .reviews-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+    .review-card { background: var(--cream); border-radius: var(--radius); padding: 2rem; border: 1px solid transparent; transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s; position: relative; }
+    .review-card:hover { border-color: rgba(232,82,124,0.2); transform: translateY(-3px); box-shadow: 0 12px 30px rgba(232,82,124,0.08); }
+    .review-card.featured { background: linear-gradient(135deg, #fff0f5, #fff8ec); border-color: rgba(232,82,124,0.18); grid-column: span 2; }
+    .review-quote-mark { font-family: var(--ff-head); font-size: 3.5rem; color: var(--pink); opacity: 0.25; line-height: 0.8; margin-bottom: 0.5rem; display: block; }
+    .review-text { font-family: var(--ff-head); font-style: italic; font-size: 1rem; line-height: 1.75; color: var(--dark); margin-bottom: 1.5rem; }
+    .review-card.featured .review-text { font-size: 1.1rem; }
+    .review-footer { display: flex; align-items: center; gap: 0.8rem; }
+    .review-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--pink), var(--coral)); display: flex; align-items: center; justify-content: center; font-family: var(--ff-head); font-style: italic; color: white; font-size: 0.95rem; flex-shrink: 0; }
+    .review-name { font-size: 0.88rem; font-weight: 500; color: var(--dark); }
+    .review-stars { font-size: 0.78rem; color: var(--gold); letter-spacing: 0.05em; }
+    .review-lang { margin-left: auto; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); opacity: 0.7; }
+
+    /* ── BUY ── */
+    .buy-section { background: white; text-align: center; }
+    .buy-cards { display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; margin-top: 2.5rem; }
+    .buy-card { background: var(--cream); border: 2px solid transparent; border-radius: 20px; padding: 2.5rem 2rem; width: 280px; text-align: center; transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s; position: relative; }
+    .buy-card:hover { border-color: var(--pink); transform: translateY(-5px); box-shadow: 0 20px 50px rgba(232,82,124,0.15); }
+    .buy-card.featured { background: linear-gradient(145deg, #fff0f5, #fff8ec); border-color: var(--pink); }
+    .buy-card-badge { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--pink), var(--coral)); color: white; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.3rem 1rem; border-radius: 2rem; white-space: nowrap; }
+    .buy-icon { font-size: 2.2rem; margin-bottom: 1rem; }
+    .buy-format { font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+    .buy-name { font-family: var(--ff-head); font-size: 1.2rem; color: var(--dark); margin-bottom: 1.5rem; }
+    .buy-price { font-family: var(--ff-head); font-size: 2.4rem; color: var(--pink); line-height: 1; margin-bottom: 0.4rem; }
+    .buy-price-note { font-size: 0.75rem; color: var(--muted); margin-bottom: 2rem; }
+    .btn-buy { display: block; width: 100%; padding: 0.8rem 1.5rem; border-radius: 2rem; font-size: 0.88rem; font-weight: 500; text-decoration: none; transition: all 0.2s; border: 2px solid var(--pink); color: var(--pink); }
+    .btn-buy:hover { background: var(--pink); color: white; }
+    .buy-card.featured .btn-buy { background: var(--pink); color: white; }
+    .buy-card.featured .btn-buy:hover { background: var(--pink-dark); border-color: var(--pink-dark); }
+    .promo-offer { display: inline-flex; align-items: center; gap: 0.7rem; margin-top: 3rem; background: linear-gradient(135deg, rgba(232,82,124,0.08), rgba(232,100,58,0.06)); border: 1.5px solid rgba(232,82,124,0.2); border-radius: 2rem; padding: 0.75rem 1.6rem; font-size: 0.85rem; color: var(--muted); }
+    .promo-offer strong { color: var(--pink); }
+
+    /* ── VIDEO ── */
+    .video-section { background: var(--cream); text-align: center; }
+    .video-wrap { max-width: 700px; margin: 2.5rem auto 0; border-radius: 24px; overflow: hidden; box-shadow: 0 30px 70px rgba(232,82,124,0.25); background: #1a0e12; position: relative; aspect-ratio: 16/9; }
+    .video-wrap video { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 24px; }
+
+    /* ── INSTAGRAM ── */
+    .ig-section { background: linear-gradient(135deg, var(--dark) 0%, var(--dark2) 100%); color: white; text-align: center; }
+    .ig-section .section-tag { color: rgba(255,255,255,0.5); }
+    .ig-section h2.section-heading { color: white; }
+    .ig-section h2.section-heading em { color: var(--gold-light); }
+    .ig-section .section-body { color: rgba(255,255,255,0.6); margin: 0 auto 2.5rem; }
+    .ig-btn { display: inline-flex; align-items: center; gap: 0.7rem; background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); color: white; text-decoration: none; padding: 0.9rem 2.2rem; border-radius: 2rem; font-size: 0.92rem; font-weight: 500; box-shadow: 0 10px 30px rgba(253,29,29,0.25); transition: transform 0.2s, box-shadow 0.2s; }
+    .ig-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(253,29,29,0.4); }
+    .ig-hint { display: block; margin-top: 1.2rem; font-size: 0.8rem; color: rgba(255,255,255,0.4); letter-spacing: 0.08em; }
+
+    /* ── FOOTER ── */
+    footer { background: var(--dark); color: rgba(255,255,255,0.5); padding: 3rem 2rem; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); }
+    .footer-logo { font-family: var(--ff-head); font-style: italic; font-size: 1.4rem; color: var(--pink); margin-bottom: 0.8rem; }
+    footer p { font-size: 0.78rem; margin-bottom: 0.35rem; }
+    footer a { color: rgba(255,255,255,0.4); text-decoration: none; transition: color 0.2s; }
+    footer a:hover { color: var(--pink); }
+    .footer-links { display: flex; justify-content: center; gap: 2rem; margin-top: 1.5rem; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+    .fadeup { animation: fadeUp 0.75s ease both; }
+    .d1 { animation-delay: 0.1s; } .d2 { animation-delay: 0.22s; }
+    .d3 { animation-delay: 0.34s; } .d4 { animation-delay: 0.46s; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .hero-inner, .about-grid, .author-grid, .photo-grid { grid-template-columns: 1fr; }
+      .hero-visual { height: 380px; margin-bottom: 1rem; }
+      .hero-text { text-align: center; }
+      .hero-desc, .theme-pills, .cta-row { margin-left: auto; margin-right: auto; }
+      .theme-pills, .cta-row { justify-content: center; }
+      .author-grid { gap: 3rem; }
+      .author-img-wrap { max-width: 280px; margin: 0 auto; }
+      .themes-grid { grid-template-columns: 1fr 1fr; }
+      .nav-links { display: none; }
+      .photo-right { padding: 3rem 2rem; }
+    }
+    @media (max-width: 540px) {
+      .themes-grid { grid-template-columns: 1fr; }
+      section { padding: 4rem 1.5rem; }
+      .buy-cards { flex-direction: column; align-items: center; }
+      nav { padding: 1rem 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#">leila frey</a>
+  <ul class="nav-links">
+    <li><a href="#buch">Das Buch</a></li>
+    <li><a href="#themen">Themen</a></li>
+    <li><a href="#autorin">Autorin</a></li>
+    <li><a href="#kaufen">Kaufen</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="lang-switch">
+      <a href="/de" class="active">DE</a>
+      <a href="/en">EN</a>
+      <a href="/fr">FR</a>
+    </div>
+    <a class="nav-cta" href="#kaufen">Jetzt kaufen →</a>
+  </div>
+</nav>
+
+
+<section class="hero">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <div class="hero-inner">
+    <div class="hero-visual fadeup">
+      <div class="deco-circle"></div>
+      <div class="deco-circle-sm"></div>
+
+      <!-- Buchcover: Ersetze durch <img class="book-img" src="/static/assets/cover.jpg" alt="Cover"> sobald Datei hochgeladen -->
+      <div class="book-placeholder">
+        <div class="bp-title">my roller-<br>coaster<br>life</div>
+        <div class="bp-sub">i own it, you own yours</div>
+        <div class="bp-author">leila frey</div>
+      </div>
+
+      <!-- Autorinnenfoto: Ersetze durch <img class="author-float" src="/static/assets/leila1.jpg" alt="leila frey"> -->
+
+      <div class="badge-float">
+        <div class="badge-num">💕</div>
+        <div class="badge-label">Poetry Book</div>
+      </div>
+    </div>
+
+    <div class="hero-text">
+      <div class="eyebrow fadeup">
+        <span class="eyebrow-dot"></span>
+        Gedichtband · leila frey
+      </div>
+      <h1 class="fadeup d1">my <strong>roller-<br>coaster</strong> life</h1>
+      <p class="hero-subtitle fadeup d2">i own it, you own yours.</p>
+      <p class="hero-desc fadeup d2">
+        Liebe, die brennt. Schmerz, der formt.
+        Freiheit, die man sich erkämpft.
+        Ein Buch für alle, die das Chaos ihres Lebens
+        in Worte fassen wollen — oder endlich
+        jemanden finden, der es schon getan hat.
+      </p>
+      <div class="theme-pills fadeup d3">
+        <span class="pill">♥ Liebe</span>
+        <span class="pill">✦ Sex</span>
+        <span class="pill">◈ Freundschaft</span>
+        <span class="pill">◎ Freiheit</span>
+        <span class="pill">▲ Depression</span>
+        <span class="pill">◌ Schmerz</span>
+      </div>
+      <div class="cta-row fadeup d4">
+        <a class="btn-main" href="https://www.amazon.com/rollercoaster-life-own-you-yours/dp/3695136332" target="_blank" rel="noopener">📖 Jetzt bestellen</a>
+        <a class="btn-ghost" href="#buch">Mehr erfahren →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<div class="promo-strip">
+  🎁 Limitiertes Angebot: Bestell jetzt und erhalte eine handgeschriebene Dankeskarte von Leila — solange Vorrat reicht.
+</div>
+
+
+<section class="about" id="buch">
+  <div class="container">
+    <div class="about-grid">
+      <div>
+        <span class="section-tag">Das Buch</span>
+        <h2 class="section-heading">Dein Leben.<br><em>In Gedichten.</em></h2>
+        <p class="section-body">
+          <em>my roller-coaster life</em> ist kein Buch, das du einfach nur liest.
+          Es ist eines, das du <em>erkennst</em>. Seite für Seite begegnet dir
+          das Unaussprechliche — die Nächte, die zu lang waren, die Liebe,
+          die zu groß war, die Freiheit, für die du kämpfst.
+        </p>
+        <p class="section-body" style="margin-top:0.8rem;">
+          leila frey schreibt so, als hätte sie deine Gedanken gelesen.
+          Weil sie die gleichen hatte.
+        </p>
+        <div class="about-stats">
+          <div><div class="stat-num">6</div><div class="stat-lbl">Themen</div></div>
+          <div><div class="stat-num">∞</div><div class="stat-lbl">Momente der Stille</div></div>
+          <div><div class="stat-num">1</div><div class="stat-lbl">Ehrliche Stimme</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="highlight-card">
+          <blockquote>
+            „manchmal fällt man.
+            und manchmal
+            ist das fallen
+            der einzige weg
+            zu landen."
+          </blockquote>
+          <cite>— aus my roller-coaster life</cite>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="themes-section" id="themen">
+  <div class="container">
+    <span class="section-tag">Themen</span>
+    <h2 class="section-heading">Das Leben in<br><em>allen Kurven</em>.</h2>
+    <div class="themes-grid">
+      <div class="theme-card"><div class="tc-icon">♥</div><div class="tc-title">Liebe</div><div class="tc-desc">Von Herzklopfen bis Herzschmerz — roh, unzensiert und tief.</div></div>
+      <div class="theme-card"><div class="tc-icon">✨</div><div class="tc-title">Sex</div><div class="tc-desc">Körper, Verlangen, Verletzlichkeit. Ehrlich und ohne Scham.</div></div>
+      <div class="theme-card"><div class="tc-icon">◈</div><div class="tc-title">Freundschaft</div><div class="tc-desc">Die, die bleiben — und die, die gehen. Und was bleibt danach.</div></div>
+      <div class="theme-card"><div class="tc-icon">◎</div><div class="tc-title">Freiheit</div><div class="tc-desc">Loslassen, Ankommen, Aufbrechen. Freiheit als innerer Kampf.</div></div>
+      <div class="theme-card"><div class="tc-icon">▲</div><div class="tc-title">Depression</div><div class="tc-desc">Die Dunkelheit, die niemand sieht — in Worte gefasst.</div></div>
+      <div class="theme-card"><div class="tc-icon">◌</div><div class="tc-title">Schmerz</div><div class="tc-desc">Wunden, die heilen. Narben, die bleiben. Die stille Kraft dahinter.</div></div>
+    </div>
+  </div>
+</section>
+
+
+<section class="poem-section">
+  <div class="container">
+    <span class="section-tag">Leseprobe</span>
+    <h2 class="section-heading">Ein Vorgeschmack<br><em>für dein Herz</em>.</h2>
+    <div class="poem-box">
+      <div class="poem-divider"></div>
+      <p class="poem-text">du fragst mich wie es mir geht
+ich sage gut
+wir beide wissen
+dass das eine lüge ist
+
+aber manchmal
+ist die lüge
+das einzige
+was uns am laufen hält</p>
+      <div class="poem-divider"></div>
+      <p class="poem-credit">— leila frey, my roller-coaster life</p>
+    </div>
+  </div>
+</section>
+
+
+<section class="photo-section">
+  <div class="photo-grid">
+    <div class="photo-left">
+      <!-- Ersetze leila2.jpg mit dem richtigen Bild nach dem Upload -->
+      <img src="/static/assets/leila2.jpg" alt="leila frey liest my roller-coaster life in der Sonne"
+           onerror="this.parentElement.style.background='linear-gradient(135deg,#ffd6e7,#ffe8d5)';this.style.display='none'">
+    </div>
+    <div class="photo-right">
+      <span class="section-tag">Warum dieses Buch?</span>
+      <h2 class="section-heading">Weil dein<br>Leben <em>deins</em> ist.</h2>
+      <p class="section-body">
+        Niemand kann dir sagen, wie du zu fühlen hast.
+        Nicht die Gesellschaft. Nicht Social Media.
+        Nicht die Menschen, die du liebst.
+      </p>
+      <p class="section-body" style="margin-top:0.8rem;">
+        <em>my roller-coaster life</em> ist eine Einladung —
+        dein Chaos anzunehmen, deine Tiefs zu ehren
+        und deine Höhen zu feiern.
+        Weil du derjenige bist, der es besitzen darf.
+      </p>
+      <div style="margin-top:2rem;">
+        <a class="btn-main" href="https://buchshop.bod.de/my-rollercoaster-life-9783695753758" target="_blank" rel="noopener" style="display:inline-flex;">Jetzt lesen →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="video-section" id="video">
+  <div class="container">
+    <span class="section-tag">Deine Stimme zählt</span>
+    <h2 class="section-heading" style="text-align:center; max-width:560px; margin:0 auto 0.8rem;">
+      Was bedeutet es <em>für dich</em>?
+    </h2>
+    <p class="section-body" style="text-align:center; margin:0 auto; max-width:520px;">
+      Gedichte leben nicht auf der Seite — sie leben in den Menschen, die sie lesen.
+      Teile deine Interpretation mit <strong>#myrollercoasterlife</strong> —
+      leila liest mit.
+    </p>
+    <div class="video-wrap">
+      <video src="/static/assets/leila-video.mp4" controls playsinline preload="metadata" style="width:100%;display:block;">
+        Dein Browser unterstützt kein HTML5-Video.
+      </video>
+    </div>
+  </div>
+</section>
+
+
+<section class="author-section" id="autorin">
+  <div class="container">
+    <div class="author-grid">
+      <div class="author-img-wrap">
+        <!-- Ersetze durch <img class="author-img" src="/static/assets/leila1.jpg" alt="leila frey"> nach dem Upload -->
+        <div class="author-img-placeholder">L</div>
+        <div class="author-badge">
+          <div class="ab-num">✍️</div>
+          <div class="ab-lbl">Autorin</div>
+        </div>
+      </div>
+      <div class="author-text">
+        <span class="section-tag">Die Autorin</span>
+        <h2 class="section-heading">leila <em>frey</em></h2>
+        <p>leila frey schreibt für alle, die sich schon einmal zu laut gefühlt haben für eine Welt, die Stille erwartet.</p>
+        <p>
+          <em>my roller-coaster life</em> nimmt dich mit — beginnend im
+          <span style="color:var(--dark);font-weight:500;">Schwarz</span>:
+          dem freien Fall, dem Herzschmerz, der Selbstzerstörung.
+          Dann kommt <span style="color:var(--pink);font-weight:500;">Rot und Pink</span> —
+          das Abenteuer, das Verlangen, die Liebe die brennt.
+          Und schließlich <span style="color:#6aaa5a;font-weight:500;">Grün und Weiß</span>:
+          Hoffnung, Stärke, Freundschaft — das Licht, das bleibt.
+        </p>
+        <p>Sie schreibt mit fundamentaler Ehrlichkeit über das, was wir alle fühlen, aber selten aussprechen — damit du weißt: <em>du bist damit nicht allein.</em></p>
+        <div class="author-links">
+          <a class="author-link" href="https://leilafrey.com" target="_blank" rel="noopener">🌐 leilafrey.com</a>
+          <a class="author-link" href="https://www.instagram.com/lei_lafrey/" target="_blank" rel="noopener">📸 @lei_lafrey</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="reviews-section" id="reviews">
+  <div class="container">
+    <span class="section-tag">Leserstimmen</span>
+    <h2 class="section-heading">Was <em>Menschen</em><br>sagen.</h2>
+    <div class="reviews-stars">★★★★★</div>
+    <div class="reviews-grid">
+      <div class="review-card featured">
+        <span class="review-quote-mark">"</span>
+        <p class="review-text">„Mit diesem Buchpräsent ist Ihnen ja eine schöne Überraschung gelungen. Ich war wirklich gerührt, als ich das Buch in den Händen hielt. Die Texte gehen nahe, sind intensiv, menschlich. Sie geben viel von sich hinein — das schafft schnell eine Verbindung."</p>
+        <div class="review-footer">
+          <div class="review-avatar">K</div>
+          <div><div class="review-name">Dr. Klaus</div><div class="review-stars">★★★★★</div></div>
+          <span class="review-lang">🇩🇪 Deutsch</span>
+        </div>
+      </div>
+      <div class="review-card">
+        <span class="review-quote-mark">"</span>
+        <p class="review-text">„Tolles Buch. Bravo! Inhaltlich waren viele schwierige Zeiten dabei — ich bin froh, dass es dir besser geht und du mit diesem wundervollen Buchwerk alles verarbeiten konntest."</p>
+        <div class="review-footer">
+          <div class="review-avatar">C</div>
+          <div><div class="review-name">Colin Hoffmann</div><div class="review-stars">★★★★★</div></div>
+          <span class="review-lang">🇩🇪 Deutsch</span>
+        </div>
+      </div>
+      <div class="review-card">
+        <span class="review-quote-mark">"</span>
+        <p class="review-text">„Your book is so emotional — I love your writing. I can feel your pain, your words got to my soul."</p>
+        <div class="review-footer">
+          <div class="review-avatar">E</div>
+          <div><div class="review-name">Eleonore Thiery</div><div class="review-stars">★★★★★</div></div>
+          <span class="review-lang">🇫🇷 France</span>
+        </div>
+      </div>
+      <div class="review-card" style="display:flex;flex-direction:column;justify-content:center;">
+        <span class="review-quote-mark">"</span>
+        <p class="review-text" style="font-size:1.25rem;text-align:center;margin-bottom:1.5rem;">„Your writing is true arts."</p>
+        <div class="review-footer" style="justify-content:center;">
+          <div class="review-avatar">K</div>
+          <div><div class="review-name">Karin</div><div class="review-stars">★★★★★</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="buy-section" id="kaufen">
+  <div class="container">
+    <span class="section-tag" style="display:block;text-align:center;">Bestellen</span>
+    <h2 class="section-heading" style="text-align:center;max-width:500px;margin:0 auto;">Dein Exemplar <em>wartet</em>.</h2>
+    <p class="section-body" style="text-align:center;margin:0.8rem auto 0;">Erhältlich als Taschenbuch und E-Book über Amazon und Books on Demand.</p>
+    <div class="buy-cards">
+      <div class="buy-card">
+        <div class="buy-icon">📱</div>
+        <div class="buy-format">Digital</div>
+        <div class="buy-name">E-Book</div>
+        <div class="buy-price">7,99 €</div>
+        <div class="buy-price-note">inkl. MwSt. · sofort lesen</div>
+        <a class="btn-buy" href="https://www.amazon.com/rollercoaster-life-own-you-yours/dp/3695136332" target="_blank" rel="noopener">Auf Amazon →</a>
+      </div>
+      <div class="buy-card featured">
+        <div class="buy-card-badge">⭐ Empfohlen</div>
+        <div class="buy-icon">📚</div>
+        <div class="buy-format">Printausgabe</div>
+        <div class="buy-name">Taschenbuch</div>
+        <div class="buy-price">19,99 €</div>
+        <div class="buy-price-note">inkl. MwSt. + Versand</div>
+        <a class="btn-buy" href="https://buchshop.bod.de/my-rollercoaster-life-9783695753758" target="_blank" rel="noopener">Bei BoD bestellen →</a>
+      </div>
+    </div>
+    <div class="promo-offer">
+      🎁 <strong>Jetzt:</strong> Teile dein Foto mit <strong>#myrollercoasterlife</strong> auf Instagram und erhalte eine persönliche Antwort von leila.
+    </div>
+  </div>
+</section>
+
+
+<section class="ig-section">
+  <div class="container">
+    <span class="section-tag">Community</span>
+    <h2 class="section-heading">Werde Teil<br><em>der Reise</em>.</h2>
+    <p class="section-body">Gedichte, Gedanken und echte Momente — täglich auf Instagram. Folge leila für einen Blick hinter die Kulissen des Buches.</p>
+    <a class="ig-btn" href="https://www.instagram.com/lei_lafrey/" target="_blank" rel="noopener">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+      @lei_lafrey
+    </a>
+    <span class="ig-hint">#myrollercoasterlife</span>
+  </div>
+</section>
+
+
+<footer>
+  <div class="footer-logo">leila frey</div>
+  <p>© 2024 leila frey · Self-Published via Books on Demand</p>
+  <p><a href="https://leilafrey.com" target="_blank" rel="noopener">leilafrey.com</a></p>
+  <div class="footer-links">
+    <a href="#">Impressum</a>
+    <a href="#">Datenschutz</a>
+    <a href="https://leilafrey.com" target="_blank" rel="noopener">Website</a>
+  </div>
+</footer>
+
+</body>
+</html>
