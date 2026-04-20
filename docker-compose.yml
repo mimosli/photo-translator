@@ -17,7 +17,7 @@ services:
       - ./infra/nginx/conf.d:/etc/nginx/conf.d:ro
       - ./static:/static:ro
       - ./infra/certbot/www:/var/www/certbot:ro
-      - ./infra/certbot/conf:/etc/letsencrypt:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
       # TLS (later):
       # - ./infra/letsencrypt:/etc/letsencrypt:ro
       # - ./infra/certbot/www:/var/www/certbot:ro
