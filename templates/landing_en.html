@@ -296,6 +296,32 @@
     footer a:hover { color: var(--pink); }
     .footer-links { display: flex; justify-content: center; gap: 2rem; margin-top: 1.5rem; }
 
+    /* ── FLAG BUTTONS ── */
+    .flag-nav {
+      position: fixed; top: 70px; right: 1.5rem; z-index: 200;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .flag-btn {
+      display: flex; align-items: center; gap: 8px;
+      background: white; border: 1.5px solid rgba(232,82,124,0.2);
+      border-radius: 2rem; padding: 6px 14px 6px 10px;
+      text-decoration: none; font-size: 0.8rem; font-weight: 600;
+      color: var(--dark); letter-spacing: 0.04em;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+      transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+      white-space: nowrap;
+    }
+    .flag-btn:hover {
+      border-color: var(--pink); transform: translateX(-3px);
+      box-shadow: 0 6px 20px rgba(232,82,124,0.2);
+    }
+    .flag-btn .flag { font-size: 1.3rem; line-height: 1; }
+    @media (max-width: 540px) {
+      .flag-nav { top: 60px; right: 0.8rem; }
+      .flag-btn { padding: 5px 10px 5px 8px; font-size: 0.72rem; }
+      .flag-btn .flag { font-size: 1.1rem; }
+    }
+
     /* ── ANIMATIONS ── */
     @keyframes fadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
     .fadeup { animation: fadeUp 0.75s ease both; }
@@ -338,6 +364,11 @@
   </style>
 </head>
 <body>
+
+<div class="flag-nav">
+  <a class="flag-btn" href="/fr"><span class="flag">🇫🇷</span> France</a>
+  <a class="flag-btn" href="/de"><span class="flag">🇩🇪</span> Germany</a>
+</div>
 
 <nav>
   <a class="nav-logo" href="#">leila frey</a>
@@ -544,7 +575,7 @@ keeping us going</p>
   <div class="container">
     <div class="author-grid">
       <div class="author-img-wrap">
-        <img class="author-img" src="/static/assets/leila1.jpg" alt="leila frey">
+        <img class="author-img" src="/static/assets/leila3.jpg" alt="leila frey">
         <div class="author-badge">
           <div class="ab-num">✍️</div>
           <div class="ab-lbl">Author</div>
